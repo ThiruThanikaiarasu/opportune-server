@@ -13,12 +13,12 @@
   "dependencies": {
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
-    "mongoose": "^8.9.3"
+    "mongoose": "^8.9.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "dotenv": "^16.4.7",
-    "nodemon": "^3.1.9",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "nodemon": "^3.1.9"
   }
 }
