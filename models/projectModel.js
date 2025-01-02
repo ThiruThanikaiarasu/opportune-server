@@ -63,6 +63,16 @@ const mongoose = require('mongoose')
  *       type: integer
  *       description: The number of upvotes the project has received.
  *       example: 25
+ *      createdAt:
+ *       type: string
+ *       format: date-time
+ *       description: The timestamp when the project was created.
+ *       example: '2025-01-01T12:00:00Z'
+ *      updatedAt:
+ *       type: string
+ *       format: date-time
+ *       description: The timestamp when the project was last updated.
+ *       example: '2025-01-01T12:00:00Z'
  *     additionalProperties: false
  *     timestamps: true
  */

@@ -49,6 +49,16 @@ const mongoose = require('mongoose')
  *       type: string
  *       description: Password for the user account
  *       example: Johndoe123@
+ *      createdAt:
+ *       type: string
+ *       format: date-time
+ *       description: The timestamp when the user was created.
+ *       example: '2025-01-01T12:00:00Z'
+ *      updatedAt:
+ *       type: string
+ *       format: date-time
+ *       description: The timestamp when the user was last updated.
+ *       example: '2025-01-01T12:00:00Z'
  *     additionalProperties: false
  *     timestamps: true
  * 
