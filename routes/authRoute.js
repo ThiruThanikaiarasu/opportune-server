@@ -1,11 +1,13 @@
 const express = require('express')
 const router = express.Router()
+
 const { validateUserSignupInputValues } = require('../validators/authValidator')
 const { signup } = require('../controllers/authController')
 
+
 /**
  * @swagger
- * /signup:
+ * /auth/signup:
  *   post:
  *     tags:
  *       - User Authentication
@@ -32,22 +34,13 @@ const { signup } = require('../controllers/authController')
  *                 properties:
  *                   countryCode:
  *                     type: string
- *                     example: +91
+ *                     example: "+91"
  *                   number:
  *                     type: string
  *                     example: 7785877858
- *                 required:
- *                   - countryCode
- *                   - number
  *               password:
  *                 type: string
  *                 example: Johndoe123@
- *               googleId:
- *                 type: string
- *                 example: google-id-12345
- *               githubId:
- *                 type: string
- *                 example: github-id-67890
  *     responses:
  *       201:
  *         description: User created successfully

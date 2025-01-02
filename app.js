@@ -1,13 +1,15 @@
 require('dotenv').config()
 const express = require('express')
 const app = express()
+
+const swaggerUi = require('swagger-ui-express')
+
+const swaggerSpec = require('./configurations/swaggerConfig') 
 const authRoute = require('./routes/authRoute')
 
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./configurations/swaggerConfig');
 
-app.use(express.json());
-app.use(express.urlencoded({extended:true})); 
+app.use(express.json())
+app.use(express.urlencoded({extended:true}))
 
 app.get('/', (request, response) => {
     response.status(200).send({ message: "Server running successfully."})

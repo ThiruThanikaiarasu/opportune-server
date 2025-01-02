@@ -1,10 +1,12 @@
 const { findUserByEmail,createUser } = require('../services/authService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
+
+
 const signup = async(request,response) =>
 {
     const { name , email, password, phone} =  request.body
-    const phoneNumber = phone || undefined; 
+    const phoneNumber = phone || undefined 
     try
     {
         const errors = validationResult(request)
