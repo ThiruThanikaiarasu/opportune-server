@@ -11,14 +11,12 @@ const mongoose = require('mongoose')
  *      - email
  *      - password
  *     properties: 
- *      id:
- *       type: string
- *       description: The unique identifier for the user
- *       example: 650f-
  *      name:
  *       type: string
  *       description: Name of the user
  *       example: John Doe
+ *       minLength: 1
+ *       maxLength: 100
  *      email:
  *       type: string
  *       description: Email of the user
@@ -41,6 +39,8 @@ const mongoose = require('mongoose')
  *       type: string
  *       description: Password for the user account
  *       example: Johndoe123@
+ *       minLength: 8
+ *       maxLength: 20
  *      googleId:
  *       type: string
  *       description: Password for the user account
@@ -49,8 +49,11 @@ const mongoose = require('mongoose')
  *       type: string
  *       description: Password for the user account
  *       example: Johndoe123@
+ *     additionalProperties: false
+ *     timestamps: true
  * 
  */
+
 const userSchema = new mongoose.Schema(
     {
         name: {
