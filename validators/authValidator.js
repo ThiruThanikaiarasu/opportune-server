@@ -14,10 +14,10 @@ const validateUserSignupInputValues =
     body('email')
         .notEmpty()
             .withMessage('Email is a required field')
-        .isEmail()
-            .withMessage('Invalid email format')
         .isLength({ max: 254 })
-            .withMessage('Email must not exceed 254 characters'),
+            .withMessage('Email must not exceed 254 characters')
+        .isEmail()
+            .withMessage('Invalid email format'),
 
     body('password')
         .notEmpty()
