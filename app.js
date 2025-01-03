@@ -4,12 +4,14 @@ const app = express()
 
 const cors = require('cors')
 const swaggerUi = require('swagger-ui-express')
+const cookieParser = require('cookie-parser')
 
 const swaggerSpec = require('./configurations/swaggerConfig') 
 const authRoute = require('./routes/authRoute')
 
 
 app.use(cors())
+app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 

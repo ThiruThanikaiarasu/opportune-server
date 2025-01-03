@@ -34,7 +34,6 @@ const validateUserSignupInputValues =
             .withMessage('Password must contain at least one special character')
     ]
 
-
 module.exports = {
     validateUserSignupInputValues
 }

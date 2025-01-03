@@ -1,7 +1,7 @@
 const { findUserByEmail,createUser } = require('../services/authService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
-
+const { generateToken, setTokenCookie } = require('../services/tokenServices')
 
 const signup = async(request,response) =>
 {
@@ -20,8 +20,12 @@ const signup = async(request,response) =>
         {
             return response.status(409).send(setResponseBody("User already exist","existing_user",null))
         }
+
         const newUser = await createUser(name, email, password, phoneNumber) 
 
+        const token = generateToken(newUser)
+        setTokenCookie(response, token)
+        
         response.status(201).send(setResponseBody("User Created Successfully", null, newUser))
     }
     catch(error)
