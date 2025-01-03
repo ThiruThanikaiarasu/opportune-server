@@ -31,7 +31,17 @@ const validateUserSignupInputValues =
         .matches(/\d/)
             .withMessage('Password must contain at least one number')
         .matches(/[@$!%*?&]/)
-            .withMessage('Password must contain at least one special character')
+            .withMessage('Password must contain at least one special character'),
+
+    body('phone.countryCode')
+        .optional()
+        .matches(/^\+\d{1,4}$/)
+            .withMessage('Country code must be in the format +<1-4 digits>'),
+    
+    body('phone.number')
+        .optional()
+        .matches(/^\d{10}$/)
+            .withMessage('Phone number must be exactly 10 digits'),
     ]
 
 module.exports = {
