@@ -2,12 +2,14 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 
+const cors = require('cors')
 const swaggerUi = require('swagger-ui-express')
 
 const swaggerSpec = require('./configurations/swaggerConfig') 
 const authRoute = require('./routes/authRoute')
 
 
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 

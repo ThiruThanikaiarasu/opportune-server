@@ -11,11 +11,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "mongoose": "^8.9.3",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^4.5.0"
   },
   "devDependencies": {
     "dotenv": "^16.4.7",
