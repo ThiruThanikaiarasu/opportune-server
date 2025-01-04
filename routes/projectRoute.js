@@ -3,6 +3,7 @@ const router = express.Router()
 
 const { addANewProject } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
+const { verifyUser } = require('../middleware/authMiddleware')
 
 
 /**
@@ -58,6 +59,6 @@ const upload = require('../middleware/fileUpload')
  *         description: Project created successfully
 */
 
-router.post('/', upload.single('thumbnail'), addANewProject)
+router.post('/', verifyUser, upload.single('thumbnail'), addANewProject)
 
 module.exports = router
