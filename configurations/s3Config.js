@@ -6,7 +6,7 @@ const s3 = new S3Client(
             accessKeyId: process.env.BUCKET_ACCESS_KEY,
             secretAccessKey: process.env.BUCKET_SECRET_KEY
         },
-        region: BUCKET_REGION
+        region: process.env.BUCKET_REGION
     }
 )
 
