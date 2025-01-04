@@ -11,6 +11,7 @@ const bcrypt = require('bcrypt')
  *      - name
  *      - email
  *      - password
+ *      - username
  *     properties: 
  *      name:
  *       type: string
@@ -18,6 +19,12 @@ const bcrypt = require('bcrypt')
  *       example: John Doe
  *       minLength: 1
  *       maxLength: 100
+ *      username:
+ *       type: string
+ *       description: Username unique name for each user(case insensitive)
+ *       example: JohnDoe
+ *       minLength: 1
+ *       maxLength: 39
  *      email:
  *       type: string
  *       description: Email of the user
@@ -76,6 +83,16 @@ const userSchema = new mongoose.Schema(
               /^[A-Za-z\s]+$/, // Regex to allow only letters and spaces
               'First name can only contain letters and spaces',
             ],
+        },
+        username: {
+            type: String, 
+            required: [true, "Username is a mandatory field"],
+            minLength: [1, 'Username must be at least 1 character long'],
+            maxLength: [39, 'Username must not exceed 39 characters'],
+            match: [
+                /^(?=[a-zA-Z0-9])(?=.*[a-zA-Z0-9]$)[a-zA-Z0-9-_]*$/,
+                "Username can only contain letters, numbers, hyphens (-), and underscores (_), and must not start or end with a hyphen or underscore"
+            ]
         },
         email: {
             type: String, 
