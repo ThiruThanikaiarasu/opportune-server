@@ -9,6 +9,7 @@ const mongoose = require('mongoose')
  *     required:
  *      - author
  *      - title
+ *      - slug
  *      - description
  *      - thumbnail
  *      - tags
@@ -24,6 +25,10 @@ const mongoose = require('mongoose')
  *       example: 'My Cool Project'
  *       minLength: 3
  *       maxLength: 100
+ *      slug:
+ *       type: string
+ *       description: A unique, URL-friendly identifier containing only lowercase letters, numbers, and hyphens (-).
+ *       example: 'my-cool-project'
  *      description:
  *       type: string
  *       description: A brief description of the project.
@@ -31,10 +36,29 @@ const mongoose = require('mongoose')
  *       minLength: 10
  *       maxLength: 500
  *      thumbnail:
- *       type: string
- *       description: The URL of the project's thumbnail image stored in AWS S3 after the file upload.
- *       example: 'https://s3.amazonaws.com/bucket-name/thumbnail.jpg'
- *       format: uri
+ *       type: object
+ *       required: 
+ *        - originalname
+ *        - size
+ *        - mimetype
+ *        - s3Key
+ *       properties:
+ *        originalname: 
+ *         type: string
+ *         description: Originalname of the uploaded file.
+ *         example: photo1
+ *        size: 
+ *         type: number
+ *         description: Size of the uploaded file (in bytes).
+ *         example: 500
+ *        mimetype: 
+ *         type: string
+ *         description: Mimetype of the uploaded file.
+ *         example: image/png
+ *        s3Key: 
+ *         type: string
+ *         description: The URL of the project's thumbnail image stored in AWS S3 after the file upload.
+ *         example: 'https://s3.amazonaws.com/bucket-name/thumbnail.jpg'
  *      tags:
  *       type: array
  *       items:
@@ -91,6 +115,14 @@ const projectSchema = new mongoose.Schema(
             minlength: [3, 'Title must be at least 3 characters long'],
             maxlength: [100, 'Title must not exceed 100 characters'],
         },
+        slug: {
+            type: String,
+            required: [true, 'Slug is a mandatory field'],
+            match: [
+                /^[a-z0-9]+(-[a-z0-9]+)*$/,
+                'Slug can only contain lowercase letters, numbers, and hyphens (-). It must not start or end with a hyphen and must not have consecutive hyphens.'
+            ]
+        },
         description: {
             type: String,
             required: [true, 'Description is a mandatory field'],
@@ -98,8 +130,28 @@ const projectSchema = new mongoose.Schema(
             maxlength: [500, 'Description must not exceed 500 characters'],
         },
         thumbnail: {
-            type: String,
-            required: [true, 'Thumbnail is a mandatory field'],
+            originalname: {
+                type: String,
+                required: [true, 'Thumbnail Originalname is a mandatory field'],
+                trim: true,
+            },
+            size: {
+                type: Number,
+                required: [true, 'Thumbnail Size is a mandatory field'],
+            },
+            mimetype: {
+                type: String,
+                required: [true, 'Thumbnail Mimetype is a mandatory field'],
+                match: [
+                    /^image\/(jpeg|png|gif|webp|svg\+xml)$/,
+                    'Invalid MIME type. Allowed types are: jpeg, png, gif, webp, svg+xml'
+                ],
+            },
+            s3Key: {
+                type: String,
+                required: [true, 'Thumbnail S3Key is a mandatory field'],
+                trim: true,
+            }
         },
         tags: {
             type: [String],
