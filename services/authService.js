@@ -3,12 +3,11 @@ const findUserByEmail = async (email) => {
     return await userModel.findOne({email})
 }
 
-const createUser = async ( name, email, password, phone) => {
+const createUser = async ( name, email, password) => {
     const user = new userModel({
         name,
         email,
-        password,
-        phone
+        password
     })
     await user.save()
 
