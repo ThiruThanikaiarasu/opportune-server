@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject } = require('../controllers/projectController')
+const { addANewProject, searchProjects } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -67,5 +67,43 @@ const { validateProjectInputValues } = require('../validators/projectValidator')
 */
 
 router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
+
+
+/**
+ * @swagger
+ * /project/search:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Search for projects by keyword
+ *   parameters:
+ *    - name: keyword
+ *      in: query
+ *      description: The keyword to search for in project title, description and tags. 
+ *      required: true
+ *      schema: 
+ *       type: string 
+ *    - name: limit
+ *      in: query
+ *      description: The number of results to return. 
+ *      required: false
+ *      schema: 
+ *       type: string 
+ *    - name: page
+ *      in: query
+ *      description: The page number for pagination. 
+ *      required: false
+ *      schema: 
+ *       type: string 
+ *   responses: 
+ *    200:
+ *      description: Successfully retrieved projects
+ *    400:
+ *      description: Missing keyword in the query parameters
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/search', searchProjects)
 
 module.exports = router

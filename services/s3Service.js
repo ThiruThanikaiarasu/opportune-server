@@ -14,7 +14,8 @@ const uploadToS3 = async (thumbnail) => {
         Bucket: process.env.BUCKET_NAME,
         Key: imageName,
         Body: thumbnail.buffer,
-        ContentType: thumbnail.mimetype
+        ContentType: thumbnail.mimetype,
+        ACL: 'bucket-owner-full-control'
     }
 
     try{

@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 
@@ -37,6 +37,30 @@ const addANewProject = async (request, response) => {
     }
 }
 
+const searchProjects = async (request, response) => {
+    const { keyword, limit = 10, page = 1 } = request.query
+    const limitInt = parseInt(limit, 10)
+    const pageInt = parseInt(page, 10)
+
+
+    try{
+        if(!keyword || !keyword.trim()) {
+            return response.status(400).send(setResponseBody("Keyword is required", "keyword_missing", null))
+        }
+
+        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt)
+
+        console.log(projects)
+
+        response.status(200).send(setResponseBody("Projects that matches the keyword", null, projects))
+
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
-    addANewProject
+    addANewProject,
+    searchProjects
 }

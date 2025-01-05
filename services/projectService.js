@@ -54,7 +54,93 @@ const createNewProject = async (author, title, description, tags, githubLink, ho
     }
 }
 
+const searchProjectByKeyword = async (keyword, limit, page) => {
+    const skip = (page - 1) * limit
+    
+    const searchQuery = {
+        $or: [
+            {
+                title: {
+                    $regex: keyword,
+                    $options: 'i',
+                }
+            },
+            {
+                description: {
+                    $regex: keyword,
+                    $options: 'i',
+                }
+            },
+            {
+                tags: {
+                    $elemMatch: {
+                        $regex: keyword,
+                        $options: 'i',
+                    }
+                }
+            }
+        ]
+    }
+
+    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/` 
+
+    const projects = await projectModel.aggregate(
+        [
+            { 
+                $match: searchQuery 
+            },
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                      $cond: {
+                        if: { $ifNull: ["$thumbnail.s3Key", false] }, 
+                        then: { $concat: [
+                          s3BaseUrl,
+                          "$thumbnail.s3Key" 
+                        ] },
+                        else: null 
+                      }
+                    }
+                  }
+            },
+            {
+                $lookup: {
+                    from: 'users',           
+                    localField: 'author',    
+                    foreignField: '_id',
+                    as: 'authorDetails'
+                }
+            },
+            {
+                $unwind: '$authorDetails'
+            },
+            { 
+                $skip: skip 
+            }, 
+            { 
+                $limit: limit 
+            },
+            {
+                $project: {
+                    __v0: 0,
+                    'thumbnail.s3Key': 0,
+                    _id: 0,
+                    'authorDetails.__v': 0,
+                    'authorDetails._id': 0,
+                    'authorDetails.password': 0,
+                    'authorDetails.createdAt': 0,
+                    'authorDetails.updatedAt': 0,
+                }
+            }
+
+        ]
+    )
+
+    return projects
+}
+
 module.exports = {
     doesAuthorHaveProjectWithTitle,
-    createNewProject
+    createNewProject,
+    searchProjectByKeyword
 }
