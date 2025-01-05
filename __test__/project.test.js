@@ -151,6 +151,20 @@ describe('Project Creation', () => {
                 expect(response.body.message).toBe('Title is a required field')
             })
 
+            it('should return 400 error when the title contains special characters', async () => {
+                const response = await request(app)
+                    .post('/api/v1/project')
+                    .set('Cookie', `SessionID=${validToken}`)
+                    .field('title', 'Jotify@2025!') // Invalid title with special characters
+                    .field('description', 'A simple blog app.')
+                    .field('slug', 'jotify')
+                    .field('tags', 'MERN')
+                    .attach('thumbnail', filePath)
+        
+                expect(response.status).toBe(400)
+                expect(response.body.message).toBe('Title can only contain letters, numbers, underscores, and spaces')
+            })
+
             it('should return 400 error when the description is missing', async () => {
                 const response = await request(app)
                     .post('/api/v1/project')
@@ -177,6 +191,23 @@ describe('Project Creation', () => {
                     .field('githubLink', 'https://github.com/user/project')
                     .attach('thumbnail', filePath)
         
+                expect(response.status).toBe(400)
+                expect(response.body.message).toBe('Tags must be an array with at least one and at most three items')
+            })
+
+            it('should return 400 error when more than 3 tags are provided', async () => {
+                const response = await request(app)
+                    .post('/api/v1/project')
+                    .set('Cookie', `SessionID=${validToken}`)
+                    .field('title', 'Jotify')
+                    .field('description', 'A simple blog app.')
+                    .field('slug', 'jotify')
+                    .field('tags', 'Web Development')
+                    .field('tags', 'MERN')
+                    .field('tags', 'Full Stack')
+                    .field('tags', 'Node.js') 
+                    .attach('thumbnail', filePath)
+            
                 expect(response.status).toBe(400)
                 expect(response.body.message).toBe('Tags must be an array with at least one and at most three items')
             })
