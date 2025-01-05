@@ -4,6 +4,7 @@ const router = express.Router()
 const { addANewProject } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
+const { validateProjectInputValues } = require('../validators/projectValidator')
 
 
 /**
@@ -55,10 +56,16 @@ const { verifyUser } = require('../middleware/authMiddleware')
  *           type: string
  *           example: https://docs.myproject.com
  *   responses: 
- *       200:
+ *       201:
  *         description: Project created successfully
+ *       400:
+ *         description: Input Validation error
+ *       409:
+ *         description: Conflict, Project with same Title already exist
+ *       503:
+ *         description: Service unavailable, temporarily unable to handle the request
 */
 
-router.post('/', verifyUser, upload.single('thumbnail'), addANewProject)
+router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
 
 module.exports = router

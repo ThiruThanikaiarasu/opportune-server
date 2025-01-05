@@ -30,7 +30,6 @@ describe('Authentication', () => {
                         email: 'sudhar@gmail.com',
                         password: 'Sudhar1234@',
                     })
-                console.log(response)
                 
                 expect(response.status).toBe(201)
                 expect(response.body).toEqual(

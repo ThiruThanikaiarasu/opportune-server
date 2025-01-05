@@ -1,6 +1,11 @@
 const userModel = require('../models/userModel')
+
 const findUserByEmail = async (email) => {
     return await userModel.findOne({email})
+}
+
+const findUserById = async (id) => {
+    return await userModel.findOne({ _id: id})
 }
 
 const createUser = async ( name, email, password) => {
@@ -13,4 +18,8 @@ const createUser = async ( name, email, password) => {
 
     return user
 }
-module.exports = {findUserByEmail,createUser}
+module.exports = {
+    findUserByEmail,
+    findUserById,
+    createUser
+}

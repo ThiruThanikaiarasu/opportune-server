@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken')
 
 const { setResponseBody } = require('../utils/responseFormatter')
 const userModel = require('../models/userModel')
+const { findUserById } = require('../services/authService')
 
 
 const parseCookies = (cookieString) => {
@@ -31,7 +32,7 @@ const verifyUser = async (request, response, next) => {
 
             const { id } = decoded
 
-            const user = await userModel.findOne({ _id: id })
+            const user = await findUserById(id)
             request.user = {
                 _id: user._id,
                 email: user.email
