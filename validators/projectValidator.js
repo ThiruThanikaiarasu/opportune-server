@@ -5,7 +5,9 @@ const validateProjectInputValues = [
         .notEmpty()
         .withMessage('Title is a required field')
         .isLength({ min: 3, max: 100 })
-        .withMessage('Title must be between 3 and 100 characters'),
+        .withMessage('Title must be between 3 and 100 characters')
+        .matches(/^[a-zA-Z0-9_ ]+$/)
+        .withMessage('Title can only contain letters, numbers, underscores, and spaces'),
 
     body('description')
         .notEmpty()

@@ -5,7 +5,8 @@ const { uploadToS3 } = require('./s3Service')
 
 
 const doesAuthorHaveProjectWithTitle = async (author, title) => {
-    return await projectModel.exists({ author, title })
+    const slug = createSlug(title)
+    return await projectModel.exists({ author, slug })
 }
 
 const createSlug = (title) => {
