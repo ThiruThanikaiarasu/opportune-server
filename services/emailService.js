@@ -1,14 +1,13 @@
 const path = require('path')
 const fs = require('fs')
 
+const EmailError = require('../errors/EmailError')
 const transporter = require('../configurations/smtpConfig')
 
 const sendOtpThroughMail = (to, otp) => {
     try{
         if (!to || !otp) {
-            const error = new Error("Recipient email and OTP must be provided.");
-            error.status = 400;
-            throw error;
+            throw new EmailError("Recipient email and OTP must be provided.",400)
         }
 
         const templatePath = path.join(__dirname, '../templates/otpTemplate.html')

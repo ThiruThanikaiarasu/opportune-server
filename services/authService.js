@@ -1,4 +1,5 @@
 const otpModel = require('../models/otpModel')
+const OtpError = require('../errors/OtpError')
 
 const generateOtp = async( email ) =>{
     const existingOtpData = await otpModel.findOne({ email })
@@ -8,17 +9,13 @@ const generateOtp = async( email ) =>{
     {
         if(existingOtpData.attempts >= MAX_ATTEMPT)
         {
-            const error = new Error("Too many attempts");
-            error.status = 429;
-            throw error;
+            throw new OtpError("Too many attempts",429)
         }
 
         return await updateOtp(existingOtpData)
     }
 
-    const error = new Error("Session expires Signup Again");
-    error.status = 401;
-    throw error;
+    throw new OtpError("Session expires Signup Again",401)
 }
 
 const createOtp = async(name, username, email, password) => {
