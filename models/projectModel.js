@@ -25,6 +25,9 @@ const mongoose = require('mongoose')
  *       example: 'My Cool Project'
  *       minLength: 3
  *       maxLength: 100
+ *       pattern: '^[a-zA-Z0-9_ ]+$'
+ *       errorMessage:
+ *        pattern: 'Title must contain only letters, numbers, underscores, and spaces'
  *      slug:
  *       type: string
  *       description: A unique, URL-friendly identifier containing only lowercase letters, numbers, and hyphens (-).
@@ -114,6 +117,10 @@ const projectSchema = new mongoose.Schema(
             required: [true, 'Title is a mandatory field'],
             minlength: [3, 'Title must be at least 3 characters long'],
             maxlength: [100, 'Title must not exceed 100 characters'],
+            match: [
+                /^[a-zA-Z0-9_ ]+$/, 
+                'Title must contain only letters, numbers, underscores, and spaces'
+            ],
         },
         slug: {
             type: String,

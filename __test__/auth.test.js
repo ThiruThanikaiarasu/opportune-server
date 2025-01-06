@@ -42,8 +42,7 @@ describe('Authentication', () => {
                         email: 'sudhar@gmail.com',
                         password: 'Sudhar1234@',
                     })
-
-
+                
                 expect(response.status).toBe(201)
                 expect(response.body).toEqual(
                     expect.objectContaining({

@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
+const { validateProjectInputValues } = require('../validators/projectValidator')
 
 
 /**
@@ -55,10 +56,109 @@ const { verifyUser } = require('../middleware/authMiddleware')
  *           type: string
  *           example: https://docs.myproject.com
  *   responses: 
- *       200:
+ *       201:
  *         description: Project created successfully
+ *       400:
+ *         description: Input Validation error
+ *       409:
+ *         description: Conflict, Project with same Title already exist
+ *       503:
+ *         description: Service unavailable, temporarily unable to handle the request
 */
 
-router.post('/', verifyUser, upload.single('thumbnail'), addANewProject)
+router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
+
+
+/**
+ * @swagger
+ * /project/search:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Search for projects by keyword
+ *   parameters:
+ *    - name: keyword
+ *      in: query
+ *      description: The keyword to search for in project title, description and tags. 
+ *      required: true
+ *      schema: 
+ *       type: string 
+ *    - name: limit
+ *      in: query
+ *      description: The number of results to return. 
+ *      required: false
+ *      schema: 
+ *       type: string 
+ *    - name: page
+ *      in: query
+ *      description: The page number for pagination. 
+ *      required: false
+ *      schema: 
+ *       type: string 
+ *   responses: 
+ *    200:
+ *      description: Successfully retrieved projects
+ *    400:
+ *      description: Missing keyword in the query parameters
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/search', searchProjects)
+
+
+/**
+ * @swagger
+ * /project/filter:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Filter projects by tag and sort the results
+ *   parameters:
+ *    - name: tag
+ *      in: query
+ *      description: The tag to filter projects by.
+ *      required: false
+ *      schema: 
+ *       type: string
+ *    - name: sortBy
+ *      in: query
+ *      description: The field to sort the results by. Default is "createdAt".
+ *      required: false
+ *      schema: 
+ *       type: string
+ *       example: "createdAt"
+ *    - name: order
+ *      in: query
+ *      description: The order of sorting. Can be "asc" or "desc". Default is "desc".
+ *      required: false
+ *      schema: 
+ *       type: string
+ *       enum:
+ *        - asc
+ *        - desc
+ *       example: "desc"
+ *    - name: limit
+ *      in: query
+ *      description: The number of results to return. Default is 10.
+ *      required: false
+ *      schema: 
+ *       type: string
+ *       example: "10"
+ *    - name: page
+ *      in: query
+ *      description: The page number for pagination. Default is 1.
+ *      required: false
+ *      schema: 
+ *       type: string
+ *       example: "1"
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved filtered projects
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/filter', filterProjects)
 
 module.exports = router
