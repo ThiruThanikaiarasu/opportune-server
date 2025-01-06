@@ -30,12 +30,26 @@ const validateProjectInputValues = [
 
     body('hostedLink')
         .optional()
-        .isURL()
+        .isURL({
+            require_protocol: true, 
+            require_valid_protocol: true, 
+            protocols: ['http', 'https'], 
+            allow_underscores: true, 
+            allow_trailing_dot: false, 
+            allow_protocol_relative_urls: false, 
+        })
         .withMessage('Hosted link must be a valid URL'),
 
     body('documentation')
         .optional()
-        .isURL()
+        .isURL({
+            require_protocol: true, 
+            require_valid_protocol: true, 
+            protocols: ['http', 'https'], 
+            allow_underscores: true, 
+            allow_trailing_dot: false, 
+            allow_protocol_relative_urls: false, 
+        })
         .withMessage('Documentation link must be a valid URL'),
 ]
 

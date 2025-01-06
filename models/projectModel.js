@@ -177,11 +177,11 @@ const projectSchema = new mongoose.Schema(
         },
         hostedLink: {
             type: String,
-            match: [/^(http|https):\/\/[a-zA-Z0-9\-]+\.[a-zA-Z]{2,6}(\/[a-zA-Z0-9\-]*)*$/, 'Hosted link must be a valid URL'],
+            match: [/^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/, 'Hosted link must be a valid URL'],
         },
         documentation: {
             type: String,
-            match: [/^(http|https):\/\/.*$/, 'Documentation link must be a valid URL'],
+            match: [/^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/, 'Documentation link must be a valid URL'],
         },
         viewsCount: {
             type: Number,
