@@ -13,4 +13,7 @@ const setTokenCookie = (response, token) => {
     response.cookie('SessionID', token, options)
 }
 
-module.exports = { generateToken, setTokenCookie }
+module.exports = { 
+    generateToken, 
+    setTokenCookie
+}

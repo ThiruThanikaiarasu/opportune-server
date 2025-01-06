@@ -1,11 +1,13 @@
-const { findUserByEmail,createUser } = require('../services/authService')
+const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/authService')
+const { findUserByEmail, createUser } = require('../services/userService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
 const { generateToken, setTokenCookie } = require('../utils/tokenServices')
+const { sendOtpThroughMail } = require('../services/emailService')
 
 const signup = async(request,response) =>
 {
-    const { name , email, password } =  request.body
+    const {name, username, email, password } =  request.body
     try
     {
         const errors = validationResult(request)
@@ -20,12 +22,10 @@ const signup = async(request,response) =>
             return response.status(409).send(setResponseBody("User already exist","existing_user",null))
         }
 
-        const newUser = await createUser(name, email, password) 
+        const otp = await createOtp(name, username, email, password) 
+        await sendOtpThroughMail(email, otp) 
 
-        const token = generateToken(newUser)
-        setTokenCookie(response, token)
-
-        response.status(201).send(setResponseBody("User Created Successfully", null, newUser))
+        response.status(201).send(setResponseBody("OTP sent successfully", null, null))
     }
     catch(error)
     {
@@ -33,4 +33,70 @@ const signup = async(request,response) =>
     }
 }
 
-module.exports = {signup}
+const sendVerificationCode = async(request, response) =>{
+    const { email } = request.body
+    try
+    {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
+        }
+
+        const existingUser = await findUserByEmail(email)
+        if(existingUser) 
+        {
+            return response.status(409).send(setResponseBody("User already exist","existing_user",null))
+        }
+
+        const otp = await generateOtp(email)
+        await sendOtpThroughMail(email, otp)
+
+        response.status(201).send(setResponseBody("OTP sent successfully", null, null))
+    }
+    catch(error)
+    {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const verifyOtp = async(request,response) => {
+    const { email, otp } = request.body
+
+    try
+    {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
+        }
+
+        const otpData = await findAuthUserByEmail(email)
+
+        if(!otpData) {
+            return response.status(410).send(setResponseBody("OTP expired. Request new one.", "otp_expired", null))
+        }
+
+        if(otpData.otp.toString() !== otp.toString()) {
+            return response.status(401).send(setResponseBody("Incorrect OTP", "verification_failed", null))
+        }
+
+        const {name, username, password } = await findAuthUserByEmail(email)
+        const newUser = await createUser(name, username, email, password)
+
+        const token = generateToken(newUser)
+        setTokenCookie(response, token)
+        
+        response.status(200).send(setResponseBody("Verification successful", null, null))
+    }
+    catch(error)
+    {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+module.exports = {
+    signup,
+    sendVerificationCode,
+    verifyOtp
+}

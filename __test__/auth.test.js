@@ -1,12 +1,24 @@
 const app = require('../app')
 const request = require('supertest')
-const { findUserByEmail, createUser } = require('../services/authService')
+const { findAuthUserByEmail, createOtp, generateOtp } = require('../services/authService')
+const { findUserByEmail, createUser } = require('../services/userService')
+const { setTokenCookie, generateToken } = require('../utils/tokenServices')
 
 jest.mock('../services/authService', () => ({
-    findUserByEmail: jest.fn(),
-    createUser: jest.fn(),
+    findAuthUserByEmail: jest.fn(),
+    createOtp: jest.fn(),
+    generateOtp : jest.fn()
 }))
 
+jest.mock('../services/userService', () => ({
+    findUserByEmail: jest.fn(),
+    createUser: jest.fn()
+}))
+
+jest.mock('../utils/tokenServices',()=> ({
+    generateToken: jest.fn(),
+    setTokenCookie: jest.fn()
+}))
 describe('Authentication', () => {
 
     beforeEach(() => {
@@ -17,44 +29,42 @@ describe('Authentication', () => {
         describe('Valid input scenario', () => {
             it('should create a new user successfully when valid data is provided', async () => {
                 
-                const mockUserData = { name: 'sudhar', email: 'sudhar@gmail.com' ,password : 'Sudhar1234@' }
+                const mockUserData = { name:'sudhar',username: 'sudhar', email: 'sudhar@gmail.com' ,password : 'Sudhar1234@' }
     
                 findUserByEmail.mockResolvedValue(null) 
-                createUser.mockResolvedValue(mockUserData) 
-    
+                createOtp.mockResolvedValue(mockUserData) 
                 
                 const response = await request(app)
                     .post('/api/v1/auth/signup')
                     .send({
-                        name: 'sudhar',
+                        name:'sudhar',
+                        username: 'sudhar',
                         email: 'sudhar@gmail.com',
                         password: 'Sudhar1234@',
                     })
-                console.log(response)
-                
+
+
                 expect(response.status).toBe(201)
                 expect(response.body).toEqual(
                     expect.objectContaining({
-                        message: 'User Created Successfully',
-                        data: mockUserData,
+                        message: 'OTP sent successfully'
                     })
                 )
                 expect(findUserByEmail).toHaveBeenCalledWith('sudhar@gmail.com')
-                expect(createUser).toHaveBeenCalledWith('sudhar', 'sudhar@gmail.com', 'Sudhar1234@')
+                expect(createOtp).toHaveBeenCalledWith('sudhar', 'sudhar', 'sudhar@gmail.com', 'Sudhar1234@')
             })
-        })
-        
-        describe('Invalid input scenario', () => {
+
             it('should return an error message when trying to sign up with an already existing email', async () => {
 
-                const mockUserData = { name: 'sudhar', email: 'sudhar@gmail.com' ,password : 'Sudhar1234@' }
+                const mockUserData = {name:'sudhar', username: 'sudhar', email: 'sudhar@gmail.com' ,password : 'Sudhar1234@' }
 
                 findUserByEmail.mockResolvedValue(mockUserData)  
 
                 const response = await request(app)
                     .post('/api/v1/auth/signup')
                     .send({
-                        name: 'sudhar',
+                        name:'sudhar',
+                        username: 'sudhar',
                         email: 'sudhar@gmail.com',
                         password: 'Sudhar1234@',
                     })
@@ -66,14 +76,15 @@ describe('Authentication', () => {
                         })
                     )
                     expect(findUserByEmail).toHaveBeenCalledWith('sudhar@gmail.com')
-                    expect(createUser).not.toHaveBeenCalled()
+                    expect(createOtp).not.toHaveBeenCalled()
             })
 
             describe('Invalid input scenario', () => {
-                it('should return an error message when the name is missing', async () => {
+                it('should return an error message when the username is missing', async () => {
                     const response = await request(app)
                         .post('/api/v1/auth/signup')
                         .send({
+                            name : 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'sudhar1234@',
                         })
@@ -81,16 +92,17 @@ describe('Authentication', () => {
                     expect(response.status).toBe(400)
                     expect(response.body).toEqual(
                         expect.objectContaining({
-                            message: 'Name is a required field',
+                            message: 'Username is a required field',
                         })
                     )
                 })
             
-                it('should return an error message when the name contains invalid characters', async () => {
+                it('should return an error message when the username contains invalid characters', async () => {
                     const response = await request(app)
                         .post('/api/v1/auth/signup')
                         .send({
-                            name: 'sudhar@123',
+                            name: 'sudhar',
+                            username: 'sudhar@123',
                             email: 'sudhar@gmail.com',
                             password: 'sudhar1234@',
                         })
@@ -98,16 +110,17 @@ describe('Authentication', () => {
                     expect(response.status).toBe(400)
                     expect(response.body).toEqual(
                         expect.objectContaining({
-                            message: 'Name must contain only letters and spaces of upto ',
+                            message: 'Username can only contain letters, numbers, hyphens (-), and underscores (_), and must not start or end with a hyphen or underscore',
                         })
                     )
                 })
             
-                it('should return an error message when the name exceeds 50 characters', async () => {
+                it('should return an error message when the username exceeds 39 characters', async () => {
                     const response = await request(app)
                         .post('/api/v1/auth/signup')
                         .send({
-                            name: 'T'.repeat(51),
+                            name: 'sudhar',
+                            username: 'T'.repeat(51),
                             email: 'sudhar@gmail.com',
                             password: 'sudhar1234@',
                         })
@@ -115,7 +128,7 @@ describe('Authentication', () => {
                     expect(response.status).toBe(400)
                     expect(response.body).toEqual(
                         expect.objectContaining({
-                            message: 'Name must not exceed 50 characters',
+                            message: 'Username must not exceed 39 characters',
                         })
                     )
                 })
@@ -125,6 +138,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             password: 'sudhar1234@',
                         })
             
@@ -141,6 +155,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'invalid-email',
                             password: 'sudhar1234@',
                         })
@@ -158,6 +173,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: `${'a'.repeat(254)}@gmail.com`,
                             password: 'sudhar1234@',
                         })
@@ -175,6 +191,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                         })
             
@@ -191,6 +208,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'Th1@',
                         })
@@ -198,7 +216,7 @@ describe('Authentication', () => {
                     expect(response.status).toBe(400)
                     expect(response.body).toEqual(
                         expect.objectContaining({
-                            message: 'Password must be minimum 8 and maximum  20 characters',
+                            message: 'Password must be minimum 8 and maximum 20 characters',
                         })
                     )
                 })
@@ -208,6 +226,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'sudhar'.repeat(5) + '1@',
                         })
@@ -215,7 +234,7 @@ describe('Authentication', () => {
                     expect(response.status).toBe(400)
                     expect(response.body).toEqual(
                         expect.objectContaining({
-                            message: 'Password must be minimum 8 and maximum  20 characters',
+                            message: 'Password must be minimum 8 and maximum 20 characters',
                         })
                     )
                 })
@@ -225,6 +244,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'SUDHAR1234@',
                         })
@@ -242,6 +262,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'sudhar1234@',
                         })
@@ -259,6 +280,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'Sudhar@@@@',
                         })
@@ -276,6 +298,7 @@ describe('Authentication', () => {
                         .post('/api/v1/auth/signup')
                         .send({
                             name: 'sudhar',
+                            username: 'sudhar',
                             email: 'sudhar@gmail.com',
                             password: 'Sudhar1234',
                         })
@@ -292,5 +315,248 @@ describe('Authentication', () => {
         })
         
     })
+    
+    describe('POST /resendOtp', () => {
+        describe('Valid input scenario', () => {
+          it('should send OTP successfully for a new user', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+
+            findUserByEmail.mockResolvedValue(null);
+            generateOtp.mockResolvedValue(mockEmail); 
+          
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({ email: mockEmail });
+          
+            expect(response.status).toBe(201);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'OTP sent successfully',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(generateOtp).toHaveBeenCalledWith(mockEmail);
+          });
+      
+          it('should return 409 if the user already exists', async () => {
+            const mockEmail = 'existinguser@gmail.com';
+        
+            findUserByEmail.mockResolvedValue({ email: mockEmail }); 
+        
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({ email: mockEmail });
+        
+            console.log(response.body);
+            expect(response.status).toBe(409);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'User already exist',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(generateOtp).not.toHaveBeenCalled();
+          });
+        });
+      
+        describe('Invalid input scenario', () => {
+          it('should return 400 if email is missing', async () => {
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({}); 
+        
+            console.log(response.body);
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Email is a required field',
+              })
+            );
+            expect(findUserByEmail).not.toHaveBeenCalled();
+            expect(generateOtp).not.toHaveBeenCalled();
+          });
+      
+          it('should return 400 if email format is invalid', async () => {
+            const mockEmail = 'invalidemail'; 
+        
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({ email: mockEmail });
+        
+            console.log(response.body);
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Invalid email format',
+              })
+            );
+            expect(findUserByEmail).not.toHaveBeenCalled();
+            expect(generateOtp).not.toHaveBeenCalled();
+          });
+      
+          it('should return 500 if an error occurs in the OTP generation service', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+
+            findUserByEmail.mockResolvedValue(null);
+            generateOtp.mockRejectedValue(new Error('OTP generation failed'));
+        
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({ email: mockEmail });
+        
+            console.log(response.body);
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'OTP generation failed',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(generateOtp).toHaveBeenCalledWith(mockEmail);
+          });
+        
+          it('should return 400 if validation middleware catches an invalid input', async () => {
+            const mockEmail = ''; // Empty email input
+        
+            const response = await request(app)
+              .post('/api/v1/auth/resendOtp')
+              .send({ email: mockEmail });
+        
+            console.log(response.body);
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Email is a required field',
+              })
+            );
+            expect(findUserByEmail).not.toHaveBeenCalled();
+            expect(generateOtp).not.toHaveBeenCalled();
+          });
+        });     
+      });
+      
+      describe('POST /verifyOtp', () => {
+        const endpoint = '/api/v1/auth/verifyOtp';
+        
+        describe('Valid input scenarios', () => {
+          it('should verify OTP successfully for a valid user', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockOtp = '123456';
+            const mockUserData = {
+              email: mockEmail,
+              otp: mockOtp,
+              name: 'Sudhar',
+              username: 'sudhar',
+              password: 'hashedPassword',
+            };
+        
+            // Mock the service calls
+            findAuthUserByEmail.mockResolvedValue(mockUserData);
+            createUser.mockResolvedValue(mockUserData);
+            generateToken.mockReturnValue('mockToken');
+            setTokenCookie.mockImplementation(() => {});
+        
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              otp: mockOtp,
+            });
+        
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Verification successful',
+              })
+            );
+            expect(findAuthUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(createUser).toHaveBeenCalledWith(
+              mockUserData.name,
+              mockUserData.username,
+              mockUserData.email,
+              mockUserData.password
+            );
+            expect(generateToken).toHaveBeenCalledWith(mockUserData);
+            expect(setTokenCookie).toHaveBeenCalled();
+          });
+        });
+      
+        describe('Invalid input scenarios', () => {
+          it('should return validation error if request body is invalid', async () => {
+            const response = await request(app).post(endpoint).send({ email: '', otp: '' });
+      
+            expect(response.status).toBe(400);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: expect.any(String), 
+                error: 'validation_error',
+              })
+            );
+          });
+      
+          it('should return 410 if OTP is expired', async () => {
+            const mockEmail = 'expireduser@gmail.com';
+        
+            findAuthUserByEmail.mockResolvedValue(null); 
+        
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              otp: '123456',
+            });
+        
+            expect(response.status).toBe(410);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'OTP expired. Request new one.',
+                error: 'otp_expired',
+              })
+            );
+            expect(findAuthUserByEmail).toHaveBeenCalledWith(mockEmail);
+          });
+        
+          it('should return 401 if OTP does not match', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockOtp = '123456';
+        
+            findAuthUserByEmail.mockResolvedValue({
+              email: mockEmail,
+              otp: '654321', 
+            });
+        
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              otp: mockOtp,
+            });
+        
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Incorrect OTP',
+                error: 'verification_failed',
+              })
+            );
+            expect(findAuthUserByEmail).toHaveBeenCalledWith(mockEmail);
+          });
+      
+          it('should return 500 if an unexpected error occurs', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockOtp = '123456';
+        
+            findAuthUserByEmail.mockRejectedValue(new Error('Database error'));
+        
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              otp: mockOtp,
+            });
+        
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Database error',
+                error: 'server_error',
+              })
+            );
+            expect(findAuthUserByEmail).toHaveBeenCalledWith(mockEmail);
+          });
+        });
+      });     
 
 })

@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-const { validateUserSignupInputValues } = require('../validators/authValidator')
-const { signup } = require('../controllers/authController')
+const { validateUserSignupInputValues, validateVerifyOtpRequest, validateResendOtpRequest } = require('../validators/authValidator')
+const { signup, sendVerificationCode, verifyOtp } = require('../controllers/authController')
 
 
 /**
@@ -20,24 +20,19 @@ const { signup } = require('../controllers/authController')
  *             type: object
  *             required:
  *               - name
+ *               - username
  *               - email
  *               - password
  *             properties:
  *               name:
  *                 type: string
  *                 example: John Doe
+ *               username:
+ *                 type: string
+ *                 example: John_Doe
  *               email:
  *                 type: string
  *                 example: johndoe@gmail.com
- *               phone:
- *                 type: object
- *                 properties:
- *                   countryCode:
- *                     type: string
- *                     example: "+91"
- *                   number:
- *                     type: string
- *                     example: 7785877858
  *               password:
  *                 type: string
  *                 example: Johndoe123@
@@ -50,8 +45,72 @@ const { signup } = require('../controllers/authController')
  *         description: Conflict, User already exists
  */
 
-router.post('/signup', validateUserSignupInputValues, signup)
+router.post('/signup', validateUserSignupInputValues(), signup)
 
-router.post('/login')
+/**
+ * @swagger
+ * /auth/resendOtp:
+ *   post:
+ *     tags:
+ *       - User Authentication
+ *     summary: Resend OTP for email verification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: johndoe@gmail.com
+ *     responses:
+ *       201:
+ *         description: OTP sent successfully
+ *       409:
+ *         description: Conflict, User already exists
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/resendOtp', validateResendOtpRequest(), sendVerificationCode)
+
+/**
+ * @swagger
+ * /auth/verifyOtp:
+ *   post:
+ *     tags:
+ *       - User Authentication
+ *     summary: Verify OTP for email authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: johndoe@gmail.com
+ *               otp:
+ *                 type: string
+ *                 example: 123456
+ *     responses:
+ *       200:
+ *         description: Verification successful
+ *       401:
+ *         description: Incorrect OTP
+ *       410:
+ *         description: OTP expired
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/verifyOtp', validateVerifyOtpRequest(), verifyOtp)
 
 module.exports = router

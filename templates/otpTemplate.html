@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>MongoDB Verification Email</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background-color: #F6F6F6;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .outer-container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 auto;
+        }
+        .logo-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: flex-start;
+        }
+        .container {
+            width: 100%;
+            background-color: #F8F8FF;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.001);
+            box-sizing: border-box;
+        }
+        .footer {
+            font-size: 14px;
+            text-align: center;
+            color: #889397;
+            margin-top: 20px;
+        }
+        .verification-code {
+            font-size: 28px;
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #001e2b;
+        }
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <!-- Header outside the container box -->
+         <div class="inner-container">
+                <div class="logo-header">
+                    <img src="cid:image1" alt="opportune logo" width="30px" height="30px" style="margin-right: 8px;">
+                    <h2 style="font-size: 24px; margin: 0; color: #001e2b;">Opportune</h2>
+                </div>
+                
+                <!-- Main content inside the container box -->
+                <div class="container">
+                    <h1 style="color: #3d4f58; font-size: 24px; margin-bottom: 20px;">One-Time Verification Code</h1>
+                    <p style="color: #5e5e5e; line-height: 1.5; margin-bottom: 15px; font-size: 16px;">
+                        You are receiving this email because a request was made for a one-time code that can be used for authentication.
+                    </p>
+                    <p style="color: #5e5e5e; line-height: 1.5; margin-bottom: 15px; font-size: 16px;">
+                        Please enter the following code for verification:
+                    </p>
+                    <div class="verification-code">${otp}</div>
+                    <p style="color: #5e5e5e; line-height: 1.5; font-size: 16px;">
+                        For security purposes, this code is valid for only 
+                        <span style="color: #000000; font-size: 17px; font-weight: bold;">10 minutes</span>.
+                        Please complete your verification within this timeframe to ensure account safety.
+                    </p>
+                </div>
+        
+                <!-- Footer outside the container box -->
+                <div class="footer">
+                    This message was sent from Opportune
+                </div>
+         </div>
+        
+    </div>
+</body>
+</html>

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
 
 /**
  * @swagger
@@ -7,10 +8,14 @@ const mongoose = require('mongoose')
  *     Otp:
  *       type: object
  *       properties:
+ *         name:
+ *           type: string
+ *           description: The name of the user
+ *           example: john doe
  *         username:
  *           type: string
  *           description: The username of the user
- *           example: johndoe
+ *           example: john_doe
  *         email:
  *           type: string
  *           description: The email of the user
@@ -33,6 +38,7 @@ const mongoose = require('mongoose')
  *           description: Number of OTP validation attempts
  *           example: 1
  *       required:
+ *         - name
  *         - username
  *         - email
  *         - otp
@@ -42,6 +48,16 @@ const mongoose = require('mongoose')
 
 const otpSchema = new mongoose.Schema(
     {
+        name: {
+            type: String, 
+            required: [true, 'First name is mandatory field'],
+            minlength: [1, 'First name must be at least 1 character long'],
+            maxlength: [100, 'First name must not exceed 100 characters'],
+            match: [
+              /^[A-Za-z\s]+$/, // Regex to allow only letters and spaces
+              'First name can only contain letters and spaces',
+            ],
+        },
         username: {
             type: String, 
             required: [true, "Username is a mandatory field"],
@@ -97,5 +113,21 @@ const otpSchema = new mongoose.Schema(
         collection: 'otp'
     }
 )
+
+otpSchema.pre('save', function (next) {
+    const user = this
+
+    if (!user.isModified('password')) return next()
+    bcrypt.genSalt(10, (error, salt) => {
+        if (error) return next(error)
+
+        bcrypt.hash(user.password, salt, (error, hash) => {
+            if (error) return next(error)
+
+            user.password = hash
+            next()
+        })
+    })
+})
 
 module.exports = mongoose.model('otp',otpSchema)

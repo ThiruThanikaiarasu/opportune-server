@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 
-const bcrypt = require('bcrypt')
 /**
  * @swagger
  *  components:
@@ -114,13 +113,7 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String, 
-            select: false, 
-            minlength: [8, 'Password must be at least 8 characters long'],
-            maxlength: [20, 'Password must not exceed 20 characters'],
-            match: [
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,20}$/,
-                'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-              ],
+            select: false
         },
         googleId: {
             type: String,
@@ -136,21 +129,5 @@ const userSchema = new mongoose.Schema(
         collection: 'users'
     }
 )
-
-userSchema.pre('save', function (next) {
-    const user = this
-
-    if (!user.isModified('password')) return next()
-    bcrypt.genSalt(10, (error, salt) => {
-        if (error) return next(error)
-
-        bcrypt.hash(user.password, salt, (error, hash) => {
-            if (error) return next(error)
-
-            user.password = hash
-            next()
-        })
-    })
-})
 
 module.exports = mongoose.model('users', userSchema)

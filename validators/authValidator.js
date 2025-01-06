@@ -1,49 +1,23 @@
-const { body }  = require('express-validator')
+const { validateEmail, validateUsername, validatePassword, validateOtp, validateName} = require('./commonValidators');
 
-const validateUserSignupInputValues = 
-     [
-    body('name')
-        .notEmpty()
-            .withMessage('Name is a required field')
-        .matches(/^[a-zA-Z\s]+$/)
-            .withMessage('Name must contain only letters and spaces of upto ')
-        .isLength({ max: 50 })
-            .withMessage('Name must not exceed 50 characters'),
-    
+const validateUserSignupInputValues = () => [
+    validateName(),
+    validateUsername(),
+    validateEmail(),
+    validatePassword()
+];
 
-    body('email')
-        .notEmpty()
-            .withMessage('Email is a required field')
-        .isLength({ max: 254 })
-            .withMessage('Email must not exceed 254 characters')
-        .isEmail()
-            .withMessage('Invalid email format'),
+const validateResendOtpRequest = () => [
+    validateEmail()
+];
 
-    body('password')
-        .notEmpty()
-            .withMessage('Password is required')
-        .isLength({ min: 8, max: 20 })
-            .withMessage('Password must be minimum 8 and maximum  20 characters')
-        .matches(/[a-z]/)
-            .withMessage('Password must contain at least one lowercase letter')
-        .matches(/[A-Z]/)
-            .withMessage('Password must contain at least one uppercase letter')
-        .matches(/\d/)
-            .withMessage('Password must contain at least one number')
-        .matches(/[@$!%*?&]/)
-            .withMessage('Password must contain at least one special character'),
-
-    body('phone.countryCode')
-        .optional()
-        .matches(/^\+\d{1,4}$/)
-            .withMessage('Country code must be in the format +<1-4 digits>'),
-    
-    body('phone.number')
-        .optional()
-        .matches(/^\d{10}$/)
-            .withMessage('Phone number must be exactly 10 digits'),
-    ]
+const validateVerifyOtpRequest = () => [
+    validateEmail(),
+    validateOtp()
+];
 
 module.exports = {
-    validateUserSignupInputValues
-}
+    validateUserSignupInputValues,
+    validateResendOtpRequest,
+    validateVerifyOtpRequest
+};
