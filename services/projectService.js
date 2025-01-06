@@ -139,8 +139,55 @@ const searchProjectByKeyword = async (keyword, limit, page) => {
     return projects
 }
 
+const getFilteredProjects = async (tag, sortBy, order, limit, page) => {
+
+    const skip = (page - 1) * limit
+
+    const filters = {}
+    if(tag) filters.tags = { $regex: tag, $options: 'i' }
+    
+    const sortOrder = order === 'asc' ? 1 : -1
+    const sortCriteria = { [sortBy] : sortOrder }
+
+    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
+    
+    const projects = await projectModel.aggregate(
+        [
+            {
+                $match: filters
+            },
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                      $cond: {
+                        if: { $ifNull: ["$thumbnail.s3Key", false] }, 
+                        then: { $concat: [
+                          s3BaseUrl,
+                          "$thumbnail.s3Key" 
+                        ] },
+                        else: null 
+                      }
+                    }
+                  }
+            },
+            {
+                $sort: sortCriteria
+            },
+            {
+                $skip: skip
+            },
+            {
+                $limit: limit
+            }
+        ]
+    )
+
+    return projects
+}
+
 module.exports = {
     doesAuthorHaveProjectWithTitle,
     createNewProject,
-    searchProjectByKeyword
+    searchProjectByKeyword,
+    getFilteredProjects
 }

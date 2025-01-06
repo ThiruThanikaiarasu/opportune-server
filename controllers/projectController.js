@@ -1,8 +1,9 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
+const { response } = require('../app')
 
 
 const addANewProject = async (request, response) => {
@@ -50,8 +51,6 @@ const searchProjects = async (request, response) => {
 
         const projects = await searchProjectByKeyword(keyword, limitInt, pageInt)
 
-        console.log(projects)
-
         response.status(200).send(setResponseBody("Projects that matches the keyword", null, projects))
 
     }
@@ -60,7 +59,23 @@ const searchProjects = async (request, response) => {
     }
 }
 
+const filterProjects = async (request, response) => {
+    const { tag, sortBy = "createdAt", order = "desc", limit = 10, page = 1 } = request.query 
+    const limitInt = parseInt(limit, 10)
+    const pageInt = parseInt(page, 10)
+
+    try{
+        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt)
+
+        response.status(200).send(setResponseBody("Filtered projects", null, projects))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     addANewProject,
-    searchProjects
+    searchProjects,
+    filterProjects
 }
