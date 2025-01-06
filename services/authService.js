@@ -1,4 +1,5 @@
-const otpModel = require('../models/otpModel')
+const otpModel = require('../models/otpModel');
+const userModel = require('../models/userModel');
 
 const generateOtp = async( email ) =>{
     const existingOtpData = await otpModel.findOne({ email })
@@ -59,12 +60,17 @@ const generateSixDigitOTP = () => {
     return Math.floor(100000 + Math.random() * 900000);
 }
 
-const findAuthUserByEmail = async(email) =>{
+const findAuthUserByEmail = async(email) => {
     return await otpModel.findOne({ email }).select('+password')
+}
+
+const findUserById = async (id) => {
+    return await userModel.findOne({ _id: id })
 }
 
 module.exports = {
     generateOtp,
     createOtp,
-    findAuthUserByEmail
+    findAuthUserByEmail,
+    findUserById
 }
