@@ -4,7 +4,7 @@ const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/au
 const { findUserByEmail, createUser } = require('../services/userService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
-const { generateToken, setTokenCookie } = require('../utils/tokenServices')
+const { generateToken, setTokenCookie, clearTokenCookie } = require('../utils/tokenServices')
 const { sendOtpThroughMail } = require('../services/emailService')
 const OtpError = require('../errors/OtpError')
 const EmailError = require('../errors/EmailError')
@@ -148,9 +148,29 @@ const login = async(request, response) => {
     }
 }
 
+const logout = async(request, response) =>{
+    try{
+        const userCookie = request.cookies
+        if(Object.keys(userCookie).length != 0)
+        {
+            if(userCookie.SessionID)
+            {
+                clearTokenCookie(response)
+                return response.status(201).send(setResponseBody("User has been Logout", null, null))
+            }
+            return response.status(400).send(setResponseBody("Invalid operation: No token found", null, null));
+        }
+        return response.status(204).send(setResponseBody("No active session found", null, null));
+    }
+    catch(error)
+    {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
 module.exports = {
     signup,
     sendVerificationCode,
     verifyOtp,
-    login
+    login,
+    logout
 }

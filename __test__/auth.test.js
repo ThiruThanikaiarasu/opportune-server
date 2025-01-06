@@ -612,7 +612,7 @@ describe('Authentication', () => {
               email: mockEmail,
               password: mockPassword,
             });
-            
+          
             expect(response.status).toBe(401);
             expect(response.body).toEqual(
               expect.objectContaining({

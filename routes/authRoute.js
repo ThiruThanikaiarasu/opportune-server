@@ -3,7 +3,7 @@ const router = express.Router()
 
 const { validateUserSignupInputValues, validateVerifyOtpRequest, validateResendOtpRequest, validateUserLoginInput
  } = require('../validators/authValidator')
-const { signup, sendVerificationCode, verifyOtp, login} = require('../controllers/authController')
+const { signup, sendVerificationCode, verifyOtp, login, logout } = require('../controllers/authController')
 
 
 /**
@@ -151,5 +151,25 @@ router.post('/verifyOtp', validateVerifyOtpRequest(), verifyOtp)
  */
 
 router.post('/login', validateUserLoginInput(), login)
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     tags:
+ *       - User Authentication
+ *     summary: Logout the user and clear session cookies
+ *     responses:
+ *       201:
+ *         description: User has been logged out successfully
+ *       204:
+ *         description: No active session found
+ *       400:
+ *         description: Invalid operation, no token found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/logout',logout)
 
 module.exports = router
