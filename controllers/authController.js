@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt')
+
 const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/authService')
 const { findUserByEmail, createUser } = require('../services/userService')
 const { setResponseBody } = require('../utils/responseFormatter')
@@ -111,8 +113,44 @@ const verifyOtp = async(request,response) => {
     }
 }
 
+const login = async(request, response) => {
+    const { email, password } = request.body
+    
+    try {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
+        }
+
+        const existingUser = await findUserByEmail(email)
+        if(!existingUser) {
+            return response.status(401).send(setResponseBody("Invalid email address", "invalid_email", null))
+        }
+
+        const validatePassword = await bcrypt.compare(password, existingUser.password)
+        if(!validatePassword) {
+            return response.status(401).send(setResponseBody("Invalid password", "invalid_password", null))
+        }
+
+        const token = generateToken(existingUser)
+        setTokenCookie(response, token)
+
+        let responseData = {
+            username : existingUser.username, 
+            email: existingUser.email
+        }
+
+        response.status(200).send(setResponseBody("Logged in Successfully", null, responseData))
+    }
+    catch(error){
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     signup,
     sendVerificationCode,
-    verifyOtp
+    verifyOtp,
+    login
 }

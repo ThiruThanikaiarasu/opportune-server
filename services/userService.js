@@ -1,7 +1,7 @@
 const userModel = require('../models/userModel')
 
 const findUserByEmail = (email) => {
-    return userModel.findOne({ email })
+    return userModel.findOne({ email }).select('+password')
 }
 
 const createUser = async(name, username, email, password) => {

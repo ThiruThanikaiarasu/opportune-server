@@ -1,8 +1,9 @@
 const express = require('express')
 const router = express.Router()
 
-const { validateUserSignupInputValues, validateVerifyOtpRequest, validateResendOtpRequest } = require('../validators/authValidator')
-const { signup, sendVerificationCode, verifyOtp } = require('../controllers/authController')
+const { validateUserSignupInputValues, validateVerifyOtpRequest, validateResendOtpRequest, validateUserLoginInput
+ } = require('../validators/authValidator')
+const { signup, sendVerificationCode, verifyOtp, login} = require('../controllers/authController')
 
 
 /**
@@ -71,6 +72,8 @@ router.post('/signup', validateUserSignupInputValues(), signup)
  *         description: OTP sent successfully
  *       409:
  *         description: Conflict, User already exists
+ *       429:
+ *         description: Too many attempts
  *       500:
  *         description: Internal server error
  */
@@ -112,5 +115,41 @@ router.post('/resendOtp', validateResendOtpRequest(), sendVerificationCode)
  */
 
 router.post('/verifyOtp', validateVerifyOtpRequest(), verifyOtp)
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     tags:
+ *       - User Authentication
+ *     summary: User login for authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: johndoe@gmail.com
+ *               password:
+ *                 type: string
+ *                 example: Password!123
+ *     responses:
+ *       200:
+ *         description: Logged in successfully
+ *       400:
+ *         description: Bad Request (Validation error)
+ *       401:
+ *         description: Unauthorized (Invalid email or password)
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/login', validateUserLoginInput(), login)
 
 module.exports = router

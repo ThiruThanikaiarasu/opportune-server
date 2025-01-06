@@ -1,5 +1,7 @@
 const app = require('../app')
 const request = require('supertest')
+const bcrypt = require('bcrypt');
+
 const { findAuthUserByEmail, createOtp, generateOtp } = require('../services/authService')
 const { findUserByEmail, createUser } = require('../services/userService')
 const { setTokenCookie, generateToken } = require('../utils/tokenServices')
@@ -19,6 +21,11 @@ jest.mock('../utils/tokenServices',()=> ({
     generateToken: jest.fn(),
     setTokenCookie: jest.fn()
 }))
+
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+}));
+
 describe('Authentication', () => {
 
     beforeEach(() => {
@@ -346,7 +353,7 @@ describe('Authentication', () => {
               .post('/api/v1/auth/resendOtp')
               .send({ email: mockEmail });
         
-            console.log(response.body);
+            ;
             expect(response.status).toBe(409);
             expect(response.body).toEqual(
               expect.objectContaining({
@@ -364,7 +371,7 @@ describe('Authentication', () => {
               .post('/api/v1/auth/resendOtp')
               .send({}); 
         
-            console.log(response.body);
+            ;
             expect(response.status).toBe(400);
             expect(response.body).toEqual(
               expect.objectContaining({
@@ -382,7 +389,7 @@ describe('Authentication', () => {
               .post('/api/v1/auth/resendOtp')
               .send({ email: mockEmail });
         
-            console.log(response.body);
+            ;
             expect(response.status).toBe(400);
             expect(response.body).toEqual(
               expect.objectContaining({
@@ -403,7 +410,7 @@ describe('Authentication', () => {
               .post('/api/v1/auth/resendOtp')
               .send({ email: mockEmail });
         
-            console.log(response.body);
+            ;
             expect(response.status).toBe(500);
             expect(response.body).toEqual(
               expect.objectContaining({
@@ -421,7 +428,6 @@ describe('Authentication', () => {
               .post('/api/v1/auth/resendOtp')
               .send({ email: mockEmail });
         
-            console.log(response.body);
             expect(response.status).toBe(400);
             expect(response.body).toEqual(
               expect.objectContaining({
@@ -558,4 +564,113 @@ describe('Authentication', () => {
         });
       });     
 
+      describe('POST /login', () => {
+        const endpoint = '/api/v1/auth/login';
+      
+        describe('Valid input scenarios', () => {
+          it('should log in successfully for a valid user', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockPassword = 'Password!123';
+            const mockHashedPassword = '$2b$12$BCcbna240rC./pqOqs8CaOM6vGcf5pXmxcx4LGJWCEjootd9uzeou'; // example hashed password
+            const mockUserData = {
+              email: mockEmail,
+              password: mockHashedPassword,
+              username: 'sudhar',
+            };
+            
+            findUserByEmail.mockResolvedValue(mockUserData);
+            bcrypt.compare.mockResolvedValue(true);
+            generateToken.mockReturnValue('mockToken');
+            setTokenCookie.mockImplementation(() => {});
+      
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              password: mockPassword,
+            });
+
+            expect(response.status).toBe(200);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Logged in Successfully',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+            expect(generateToken).toHaveBeenCalledWith(mockUserData);
+            expect(setTokenCookie).toHaveBeenCalledWith(expect.any(Object), 'mockToken');
+          });
+        });
+      
+        describe('Invalid input scenarios', () => {
+          it('should return an error for invalid email', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockPassword = 'Password!123';
+      
+            findUserByEmail.mockResolvedValue(null);
+      
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              password: mockPassword,
+            });
+            
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Invalid email address',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+          });
+      
+          it('should return an error for invalid password', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockPassword = 'Password!123';
+            const mockHashedPassword = '$2b$10$z5pS12eq6cVZb2g8rm9nQO2P8OW3eAq5DNbuw9OlgV.H.I7S/FyWm'; // example hashed password
+            const mockUserData = {
+              email: mockEmail,
+              password: mockHashedPassword,
+              username: 'sudhar',
+            };
+      
+            findUserByEmail.mockResolvedValue(mockUserData);
+            bcrypt.compare.mockResolvedValue(false);
+      
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              password: mockPassword,
+            });
+            
+            expect(response.status).toBe(401);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Invalid password',
+              })
+            );
+            expect(findUserByEmail).toHaveBeenCalledWith(mockEmail);
+            expect(bcrypt.compare).toHaveBeenCalledWith(mockPassword, mockHashedPassword);
+          });
+        });
+      
+        describe('Error handling', () => {
+          it('should handle server errors gracefully', async () => {
+            const mockEmail = 'sudhar@gmail.com';
+            const mockPassword = 'Password!123'
+            findUserByEmail.mockImplementation(() => {
+              throw new Error('Server error');
+            });
+      
+            const response = await request(app).post(endpoint).send({
+              email: mockEmail,
+              password: mockPassword,
+            });
+            
+            expect(response.status).toBe(500);
+            expect(response.body).toEqual(
+              expect.objectContaining({
+                message: 'Server error',
+              })
+            );
+          });
+        });
+      });
 })

@@ -16,8 +16,13 @@ const validateVerifyOtpRequest = () => [
     validateOtp()
 ];
 
+const validateUserLoginInput = () => [
+    validateEmail(),
+    validatePassword()
+]
 module.exports = {
     validateUserSignupInputValues,
     validateResendOtpRequest,
-    validateVerifyOtpRequest
+    validateVerifyOtpRequest,
+    validateUserLoginInput
 };
