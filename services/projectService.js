@@ -89,7 +89,8 @@ const getHomeFeedProjects = async (limit, page) => {
             },
             {
                 $sort: {
-                    upvoteCount: -1
+                    upvoteCount: -1,
+                    createdAt: -1
                 }
             },
             { 
