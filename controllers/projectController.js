@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 const { response } = require('../app')
@@ -36,6 +36,23 @@ const addANewProject = async (request, response) => {
         }
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
+}
+
+const homeFeed = async (request, response) => {
+
+    const { limit = 10, page = 1 } = request.query
+    const limitInt = parseInt(limit, 10)
+    const pageInt = parseInt(page, 10)
+
+    try {
+        const projects = await getHomeFeedProjects(limitInt, pageInt)
+
+        response.status(200).send(setResponseBody("Home feed projects", null, projects))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+
 }
 
 const searchProjects = async (request, response) => {
@@ -76,6 +93,7 @@ const filterProjects = async (request, response) => {
 
 module.exports = {
     addANewProject,
+    homeFeed,
     searchProjects,
     filterProjects
 }

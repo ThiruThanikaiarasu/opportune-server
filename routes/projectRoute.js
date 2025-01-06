@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -67,6 +67,39 @@ const { validateProjectInputValues } = require('../validators/projectValidator')
 */
 
 router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
+
+/**
+ * @swagger
+ * /project/home:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Retrieve the home feed projects
+ *   description: Get a list of projects for the home feed with pagination support.
+ *   parameters:
+ *    - name: limit
+ *      in: query
+ *      description: The number of results to return per page. Default is 10.
+ *      required: false
+ *      schema:
+ *       type: string
+ *       example: "10"
+ *    - name: page
+ *      in: query
+ *      description: The page number for pagination. Default is 1.
+ *      required: false
+ *      schema:
+ *       type: string
+ *       example: "1"
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved home feed projects
+ *    500:
+ *      description: Internal server error
+ */
+
+
+router.get('/home', homeFeed)
 
 
 /**
