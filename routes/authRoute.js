@@ -3,7 +3,7 @@ const router = express.Router()
 
 const { validateUserSignupInputValues, validateVerifyOtpRequest, validateResendOtpRequest, validateUserLoginInput
  } = require('../validators/authValidator')
-const { signup, sendVerificationCode, verifyOtp, login, logout } = require('../controllers/authController')
+const { signup, sendVerificationCode, verifyOtp, login, logout, sendForgotPasswordOtp } = require('../controllers/authController')
 
 
 /**
@@ -70,6 +70,8 @@ router.post('/signup', validateUserSignupInputValues(), signup)
  *     responses:
  *       201:
  *         description: OTP sent successfully
+ *       401:
+ *         description: Session expires Signup Again
  *       409:
  *         description: Conflict, User already exists
  *       429:
@@ -80,6 +82,41 @@ router.post('/signup', validateUserSignupInputValues(), signup)
 
 router.post('/resendOtp', validateResendOtpRequest(), sendVerificationCode)
 
+/**
+ * @swagger
+ * /auth/forgetPassword:
+ *   post:
+ *     tags:
+ *       - User Authentication
+ *     summary: Resend OTP for email verification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: johndoe@gmail.com
+ *     responses:
+ *       201:
+ *         description: OTP sent successfully
+ *       400:
+ *         description: Invalid Operation
+ *       401:
+ *         description: Session expires Signup Again
+ *       409:
+ *         description: Conflict, User already exists
+ *       429:
+ *         description: Too many attempts
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post('/forgetPassword', validateResendOtpRequest(), sendForgotPasswordOtp)
 /**
  * @swagger
  * /auth/verifyOtp:

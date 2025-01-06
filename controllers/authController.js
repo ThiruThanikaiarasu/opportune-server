@@ -8,6 +8,7 @@ const { generateToken, setTokenCookie, clearTokenCookie } = require('../utils/to
 const { sendOtpThroughMail } = require('../services/emailService')
 const OtpError = require('../errors/OtpError')
 const EmailError = require('../errors/EmailError')
+const { create } = require('../models/userModel')
 
 const signup = async(request,response) =>
 {
@@ -31,7 +32,7 @@ const signup = async(request,response) =>
         {
             return response.status(409).send(setResponseBody("OTP Already Sent", "existing_user", null));
         }
-        const otp = await createOtp(name, username, email, password) 
+        const otp = await createOtp( email, name, username, password) 
         await sendOtpThroughMail(email, otp) 
 
         response.status(201).send(setResponseBody("OTP sent successfully", null, null))
@@ -78,6 +79,41 @@ const sendVerificationCode = async(request, response) =>{
     }
 }
 
+const sendForgotPasswordOtp = async(request, response) =>{
+    const { email } = request.body
+    try
+    {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
+        }
+
+        const existingUser = await findUserByEmail(email)
+        if(!existingUser) 
+        {
+            return response.status(400).send(setResponseBody("Invalid Operation","null",null))
+        }
+
+        const existingOtpUser = await findAuthUserByEmail(email)
+
+        const otp = existingOtpUser ? await generateOtp(email) : await createOtp(email)
+        await sendOtpThroughMail(email, otp)
+
+        response.status(201).send(setResponseBody("OTP sent successfully", null, null))
+    }
+    catch(error)
+    {
+        if (error instanceof OtpError) {
+            return response.status(error.statusCode).send(setResponseBody(error.message, "otp_error", null)) 
+        } 
+        if (error instanceof EmailError) {
+            return response.status(error.statusCode).send(setResponseBody(error.message, "email_error", null)) 
+        } 
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 const verifyOtp = async(request,response) => {
     const { email, otp } = request.body
 
@@ -99,10 +135,16 @@ const verifyOtp = async(request,response) => {
             return response.status(401).send(setResponseBody("Incorrect OTP", "verification_failed", null))
         }
 
-        const {name, username, password } = await findAuthUserByEmail(email)
-        const newUser = await createUser(name, username, email, password)
-
-        const token = generateToken(newUser)
+        const existingUser = await findUserByEmail(email)
+        let newUser
+        if(!existingUser) 
+        {
+            const {name, username, password } = await findAuthUserByEmail(email)
+            newUser = await createUser(name, username, email, password)
+        }
+        
+        const userData = existingUser || newUser
+        const token = generateToken(userData)
         setTokenCookie(response, token)
         
         response.status(200).send(setResponseBody("Verification successful", null, null))
@@ -170,6 +212,7 @@ const logout = async(request, response) =>{
 module.exports = {
     signup,
     sendVerificationCode,
+    sendForgotPasswordOtp,
     verifyOtp,
     login,
     logout

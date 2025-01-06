@@ -19,16 +19,16 @@ const generateOtp = async( email ) =>{
     throw new OtpError("Session expires Signup Again",401)
 }
 
-const createOtp = async(name, username, email, password) => {
+const createOtp = async( email, name, username, password) => {
     const otp = generateSixDigitOTP()
 
     const otpData = {
-        name,
-        username,
-        email,
-        password,
+        name: name || null,
+        username : username || null,
+        email, 
+        password : password || null,
         otp,
-        attempts : 1
+        attempts: 1
     }
 
     await otpModel.create(otpData)

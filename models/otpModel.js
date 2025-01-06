@@ -50,23 +50,23 @@ const otpSchema = new mongoose.Schema(
     {
         name: {
             type: String, 
-            required: [true, 'First name is mandatory field'],
             minlength: [1, 'First name must be at least 1 character long'],
             maxlength: [100, 'First name must not exceed 100 characters'],
             match: [
               /^[A-Za-z\s]+$/, // Regex to allow only letters and spaces
               'First name can only contain letters and spaces',
             ],
+            default: null
         },
         username: {
             type: String, 
-            required: [true, "Username is a mandatory field"],
             minLength: [1, 'Username must be at least 1 character long'],
             maxLength: [39, 'Username must not exceed 39 characters'],
             match: [
                 /^(?=[a-zA-Z0-9])(?=.*[a-zA-Z0-9]$)[a-zA-Z0-9-_]*$/,
                 "Username can only contain letters, numbers, hyphens (-), and underscores (_), and must not start or end with a hyphen or underscore"
-            ]
+            ],
+            default: null
         },
         email: {
             type: String, 
@@ -85,6 +85,7 @@ const otpSchema = new mongoose.Schema(
                 /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,20}$/,
                 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
               ],
+            default: null
         },
         otp: {
             type: Number,
@@ -117,7 +118,7 @@ const otpSchema = new mongoose.Schema(
 otpSchema.pre('save', function (next) {
     const user = this
 
-    if (!user.isModified('password')) return next()
+    if (!user.password || !user.isModified('password')) return next()
     bcrypt.genSalt(10, (error, salt) => {
         if (error) return next(error)
 
