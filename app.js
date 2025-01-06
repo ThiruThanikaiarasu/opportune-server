@@ -11,7 +11,10 @@ const authRoute = require('./routes/authRoute')
 const projectRoute = require('./routes/projectRoute')
 
 
-app.use(cors())
+app.use(cors({
+    origin: process.env.CORS_ORIGIN_URL, 
+    credentials: true
+}))
 app.use(cookieParser())
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
