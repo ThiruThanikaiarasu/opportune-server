@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const { PutObjectCommand } = require('@aws-sdk/client-s3')
+const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 
 const s3 = require("../configurations/s3Config")
 const UploadError = require("../errors/UploadError")
@@ -27,6 +27,21 @@ const uploadToS3 = async (thumbnail) => {
     }
 }
 
+const deleteFromS3 = async (s3Key) => {
+    try {
+        const params = {
+            Bucket: process.env.BUCKET_NAME,
+            Key: s3Key
+        }
+    
+        await s3.send(new DeleteObjectCommand(params))
+    }
+    catch(error) {
+        throw new UploadError("Failed to delete old image from S3. Please try again later.", 503)
+    }
+}
+
 module.exports = {
-    uploadToS3
+    uploadToS3,
+    deleteFromS3
 }
