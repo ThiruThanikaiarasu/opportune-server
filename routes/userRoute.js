@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-const { checkUsernameAvailability } = require('../controllers/userController')
-const { validateCheckUsernameInput } = require('../validators/userValidator')
+const { checkUsernameAvailability , resetPassword } = require('../controllers/userController')
+const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../validators/userValidator')
 
 /**
  * @swagger
@@ -36,5 +36,7 @@ const { validateCheckUsernameInput } = require('../validators/userValidator')
  */
 
 router.post('/checkUsername', validateCheckUsernameInput(), checkUsernameAvailability)
+
+router.post('/resetPassword', validateResetPasswordInputs(), resetPassword)
 
 module.exports = router

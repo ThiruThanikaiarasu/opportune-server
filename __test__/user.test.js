@@ -1,9 +1,11 @@
 const request = require('supertest');
 const app = require('../app'); 
-const { findUserNameAlreadyExists } = require('../services/userService'); 
+const { findUserNameAlreadyExists, findUserByEmail, updateUserPassword } = require('../services/userService'); 
 
 jest.mock('../services/userService' ,() =>({
-    findUserNameAlreadyExists: jest.fn()
+    findUserNameAlreadyExists: jest.fn(),
+    findUserByEmail: jest.fn(),
+    updateUserPassword: jest.fn()
 }))
 
 describe('POST /checkUsername', () => {
@@ -181,5 +183,120 @@ describe('POST /checkUsername', () => {
         expect(findUserNameAlreadyExists).toHaveBeenCalledWith(mockUsername);
       });
     });
+});
+
+describe('POST /api/v1/user/resetPassword', () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
+
+  describe('Valid input scenario', () => {
+    it('should return 200 and update password successfully', async () => {
+      const mockRequestBody = { email: 'johndoe@gmail.com', password: 'Password!123' };
+      const mockUser = { name: 'John Doe', username: 'john_doe', email: 'johndoe@gmail.com' };
+      const mockUpdatedUser = { ...mockUser, password: 'hashedPassword' };
+
+      findUserByEmail.mockResolvedValue(mockUser); // User exists
+      updateUserPassword.mockResolvedValue(mockUpdatedUser); // Password updated
+
+      const response = await request(app)
+        .post('/api/v1/user/resetPassword')
+        .send(mockRequestBody);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Password reset successfully.',
+          data: {
+            name: mockUser.name,
+            username: mockUser.username,
+            email: mockUser.email,
+          },
+        })
+      );
+      expect(findUserByEmail).toHaveBeenCalledWith(mockRequestBody.email);
+      expect(updateUserPassword).toHaveBeenCalledWith(mockUser, mockRequestBody.password);
+    });
+  });
+
+  describe('Validation error scenarios', () => {
+    it('should return 400 if email or password is missing', async () => {
+
+      const response = await request(app)
+        .post('/api/v1/user/resetPassword')
+        .send({});
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          error: "validation_error",
+          message: "Email is a required field"
+        })
+      );
+      expect(findUserByEmail).not.toHaveBeenCalled();
+      expect(updateUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 if password fails validation', async () => {
+      
+      const response = await request(app)
+        .post('/api/v1/user/resetPassword')
+        .send({ email: 'johndoe@gmail.com', password: '123' });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Password must be minimum 8 and maximum 20 characters',
+          error: 'validation_error',
+        })
+      );
+      expect(findUserByEmail).not.toHaveBeenCalled();
+      expect(updateUserPassword).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Error scenarios', () => {
+    it('should return 400 if user is not found', async () => {
+      const mockRequestBody = { email: 'nonexistent@gmail.com', password: 'Password!123' };
+
+      
+      findUserByEmail.mockResolvedValue(null); // User not found
+
+      const response = await request(app)
+        .post('/api/v1/user/resetPassword')
+        .send(mockRequestBody);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          message: 'Invalid Operation'
+        })
+      );
+      expect(findUserByEmail).toHaveBeenCalledWith(mockRequestBody.email);
+      expect(updateUserPassword).not.toHaveBeenCalled();
+    });
+
+    it('should return 500 if an internal server error occurs', async () => {
+      const mockRequestBody = { email: 'johndoe@gmail.com', password: 'Password!123' };
+
+      
+      findUserByEmail.mockRejectedValue(new Error('Database connection error')); // Simulated DB error
+
+      const response = await request(app)
+        .post('/api/v1/user/resetPassword')
+        .send(mockRequestBody);
+
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          error: "server_error",
+          message: "Database connection error",
+        })
+      );
+      expect(findUserByEmail).toHaveBeenCalledWith(mockRequestBody.email);
+      expect(updateUserPassword).not.toHaveBeenCalled();
+    });
+  });
+});
   

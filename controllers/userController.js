@@ -1,4 +1,6 @@
-const { findUserNameAlreadyExists } = require('../services/userService')
+const bcrypt = require('bcrypt')
+
+const { findUserNameAlreadyExists, findUserByEmail, updateUserPassword } = require('../services/userService')
 const { validationResult } = require('express-validator')
 const { setResponseBody } = require('../utils/responseFormatter')
 
@@ -23,6 +25,38 @@ const checkUsernameAvailability = async(request,response) => {
     }
 }
 
+const resetPassword = async(request,response) => {
+    const { email, password } = request.body
+    try {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error", null))
+        }
+
+        const existingUser = await findUserByEmail(email)
+        if(!existingUser)
+        {
+            return response.status(400).send(setResponseBody("Invalid Operation", "user_not_found", null))
+        }
+
+        const userData = await updateUserPassword(existingUser, password)
+
+        let responseData = {
+            name : userData.name,
+            username : userData.username, 
+            email: userData.email
+        }
+
+        return response.status(200).send(setResponseBody("Password reset successfully.", null, responseData))
+    }
+    catch(error)
+    {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
-    checkUsernameAvailability
+    checkUsernameAvailability,
+    resetPassword
 }

@@ -27,10 +27,10 @@ const signup = async(request,response) =>
             return response.status(409).send(setResponseBody("User already exist","existing_user",null))
         }
 
-        const existingAuthUser = await findAuthUserByEmail(email)
-        if(existingAuthUser)
+        const existingOtpUser = await findAuthUserByEmail(email)
+        if(existingOtpUser)
         {
-            return response.status(409).send(setResponseBody("OTP Already Sent", "existing_user", null));
+            return response.status(403).send(setResponseBody("OTP Already Sent", "existing_user", null));
         }
         const otp = await createOtp( email, name, username, password) 
         await sendOtpThroughMail(email, otp) 

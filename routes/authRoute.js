@@ -42,8 +42,12 @@ const { signup, sendVerificationCode, verifyOtp, login, logout, sendForgotPasswo
  *         description: User created successfully
  *       400:
  *         description: Input validation error
+ *       403:
+ *         description: OTP Already Sent
  *       409:
  *         description: Conflict, User already exists
+ *       500:
+ *         description: Internal server error
  */
 
 router.post('/signup', validateUserSignupInputValues(), signup)
