@@ -3,7 +3,6 @@ const { validationResult } = require('express-validator')
 const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
-const { response } = require('../app')
 
 
 const addANewProject = async (request, response) => {
