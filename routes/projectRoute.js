@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -193,5 +193,29 @@ router.get('/search', searchProjects)
  */
 
 router.get('/filter', filterProjects)
+
+
+/**
+ * @swagger
+ * /project/tags:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Search for tags by keyword
+ *   parameters:
+ *    - name: keyword
+ *      in: query
+ *      description: The keyword to search for in tags.
+ *      required: false
+ *      schema:
+ *       type: string
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved tags
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/tags', searchTags)
 
 module.exports = router

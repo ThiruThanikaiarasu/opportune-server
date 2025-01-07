@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 
@@ -90,9 +90,22 @@ const filterProjects = async (request, response) => {
     }
 }
 
+const searchTags = async (request, response) => {
+    const { keyword = '' } = request.query
+    try {
+        const tags = await searchTagsByKeyword(keyword)
+
+        response.status(200).send(setResponseBody("Tags fetched successfully", null, tags))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     addANewProject,
     homeFeed,
     searchProjects,
-    filterProjects
+    filterProjects,
+    searchTags
 }

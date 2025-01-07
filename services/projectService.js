@@ -1,6 +1,6 @@
 const UploadError = require('../errors/UploadError')
 const projectModel = require('../models/projectModel')
-
+const projectTagModel = require('../models/projectTagModel')
 const { uploadToS3 } = require('./s3Service')
 
 
@@ -249,10 +249,26 @@ const getFilteredProjects = async (tag, sortBy, order, limit, page) => {
     return projects
 }
 
+const searchTagsByKeyword = async (keyword) => {
+    if(!keyword.trim()) {
+        return projectTagModel.find()
+    }
+
+    return projectTagModel.find(
+        {
+            tag: {
+                $regex: `^${keyword}`, 
+                $options: 'i'
+            }
+        }
+    )
+}
+
 module.exports = {
     doesAuthorHaveProjectWithTitle,
     createNewProject,
     getHomeFeedProjects,
     searchProjectByKeyword,
-    getFilteredProjects
+    getFilteredProjects,
+    searchTagsByKeyword
 }
