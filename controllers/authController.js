@@ -179,6 +179,7 @@ const login = async(request, response) => {
         setTokenCookie(response, token)
 
         let responseData = {
+            name : existingUser.name,
             username : existingUser.username, 
             email: existingUser.email
         }
