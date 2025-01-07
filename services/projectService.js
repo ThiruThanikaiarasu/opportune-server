@@ -249,9 +249,13 @@ const getFilteredProjects = async (tag, sortBy, order, limit, page) => {
     return projects
 }
 
-const searchTagsByKeyword = async (keyword) => {
+const searchAllTags = () => {
+    return projectTagModel.find()
+}
+
+const searchTagsByKeyword = (keyword) => {
     if(!keyword.trim()) {
-        return projectTagModel.find()
+        return searchAllTags()
     }
 
     return projectTagModel.find(
@@ -270,5 +274,6 @@ module.exports = {
     getHomeFeedProjects,
     searchProjectByKeyword,
     getFilteredProjects,
+    searchAllTags,
     searchTagsByKeyword
 }
