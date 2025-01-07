@@ -23,10 +23,15 @@ const validateProjectInputValues = [
     body('githubLink')
         .notEmpty()
         .withMessage('GitHub link is a required field')
-        .isURL()
-        .withMessage('GitHub link must be a valid URL')
-        .matches(/^https?:\/\/github\.com\/[a-zA-Z0-9\-]+(\/[a-zA-Z0-9\-]+)*$/)
-        .withMessage('GitHub link must be a valid GitHub repository URL'),
+        .isURL({
+            require_protocol: true, 
+            require_valid_protocol: true, 
+            protocols: ['http', 'https'], 
+            allow_underscores: true, 
+            allow_trailing_dot: false, 
+            allow_protocol_relative_urls: false, 
+        })
+        .withMessage('GitHub link must be a valid URL'),
 
     body('hostedLink')
         .optional()
