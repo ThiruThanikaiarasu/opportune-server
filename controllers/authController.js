@@ -147,7 +147,13 @@ const verifyOtp = async(request,response) => {
         const token = generateToken(userData)
         setTokenCookie(response, token)
         
-        response.status(200).send(setResponseBody("Verification successful", null, null))
+        let responseData = {
+            name : userData.name,
+            username : userData.username, 
+            email: userData.email
+        }
+
+        response.status(200).send(setResponseBody("Verification successful", null, responseData))
     }
     catch(error)
     {
