@@ -37,6 +37,40 @@ const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../
 
 router.post('/checkUsername', validateCheckUsernameInput(), checkUsernameAvailability)
 
+/**
+ * @swagger
+ * /user/resetPassword:
+ *   post:
+ *     tags:
+ *       - User Management
+ *     summary: Reset a user's password
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: johndoe@example.com
+ *                 description: The email address of the user.
+ *               password:
+ *                 type: string
+ *                 example: NewPassword123!
+ *                 description: The new password to set for the user.
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *       400:
+ *         description: Bad Request (validation error or invalid operation)
+ *       500:
+ *         description: Internal server error
+ */
+
 router.post('/resetPassword', validateResetPasswordInputs(), resetPassword)
 
 module.exports = router
