@@ -57,7 +57,7 @@ describe('Authentication', () => {
                     })
                 )
                 expect(findUserByEmail).toHaveBeenCalledWith('sudhar@gmail.com')
-                expect(createOtp).toHaveBeenCalledWith('sudhar', 'sudhar', 'sudhar@gmail.com', 'Sudhar1234@')
+                expect(createOtp).toHaveBeenCalledWith('sudhar@gmail.com','sudhar', 'sudhar', 'Sudhar1234@')
             })
 
             it('should return an error message when trying to sign up with an already existing email', async () => {

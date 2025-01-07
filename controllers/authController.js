@@ -92,7 +92,7 @@ const sendForgotPasswordOtp = async(request, response) =>{
         const existingUser = await findUserByEmail(email)
         if(!existingUser) 
         {
-            return response.status(400).send(setResponseBody("Invalid Operation","null",null))
+            return response.status(400).send(setResponseBody("Invalid Operation","user_not_found",null))
         }
 
         const existingOtpUser = await findAuthUserByEmail(email)

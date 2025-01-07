@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser')
 const swaggerSpec = require('./configurations/swaggerConfig') 
 const authRoute = require('./routes/authRoute')
 const projectRoute = require('./routes/projectRoute')
-
+const userRoute = require('./routes/userRoute')
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN_URL, 
@@ -26,5 +26,6 @@ app.get('/', (request, response) => {
 app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 app.use('/api/v1/auth',authRoute)
 app.use('/api/v1/project', projectRoute)
+app.use('/api/v1/user', userRoute)
 
 module.exports = app

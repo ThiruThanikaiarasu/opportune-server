@@ -17,7 +17,12 @@ const createUser = async(name, username, email, password) => {
 
     return user
 }
+
+const findUserNameAlreadyExists = async(username) => {
+    return await userModel.exists({ username })
+}
 module.exports = {
     findUserByEmail,
-    createUser
+    createUser,
+    findUserNameAlreadyExists
 }
