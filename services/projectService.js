@@ -351,17 +351,32 @@ const getPopularProjectsByAuthor = async (username, slug, limit, page) => {
                     from: 'users',
                     localField: 'author',
                     foreignField: '_id',
-                    as: 'authorDetails'
+                    as: 'authorDetails',
+                    pipeline: [
+                        { $match: { username: username } },
+                        { $project: { _id: 0, username: 1, name: 1, email: 1 } }
+                    ]
                 }
+            },
+            {
+                $unwind: '$authorDetails'
             },
             {
                 $match: {
                     'authorDetails.username': username,
                     slug: { $ne: slug }
-                },
+                }
             },
             {
-                $unwind: '$authorDetails'
+                $addFields: {
+                    thumbnailUrl: {
+                        $cond: {
+                            if: { $ifNull: ['$thumbnail.s3Key', false] },
+                            then: { $concat: [s3BaseUrl, '$thumbnail.s3Key'] },
+                            else: null
+                        }
+                    }
+                }
             },
             {
                 $sort: {
@@ -371,24 +386,20 @@ const getPopularProjectsByAuthor = async (username, slug, limit, page) => {
                 }
             },
             {
-                $skip: skip
-            },
-            {
-                $limit: limit
+                $facet: {
+                    metadata: [{ $count: 'total' }],
+                    data: [{ $skip: skip }, { $limit: limit }]
+                }
             },
             {
                 $project: {
-                    '__v': 0,
-                    'thumbnail.s3Key': 0,
-                    '_id': 0,
-                    'author': 0,
-                    'authorDetails.__v': 0,
-                    'authorDetails._id': 0,
-                    'authorDetails.password': 0,
-                    'authorDetails.createdAt': 0,
-                    'authorDetails.updatedAt': 0,
+                    total: { $arrayElemAt: ['$metadata.total', 0] },
+                    projects: '$data'
                 }
-            }   
+            },
+            {
+                $unset: ['__v', 'thumbnail.s3Key', '_id', 'author']
+            }
         ]
     )
 
