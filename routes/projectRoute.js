@@ -237,7 +237,7 @@ router.get('/tag', searchTags)
 
 /**
  * @swagger
- * /{username}/{slug}:
+ * /project/{username}/{slug}:
  *  get:
  *   tags:
  *    - Project
@@ -271,7 +271,7 @@ router.get('/:username/:slug', getProjectByUsernameAndSlug)
 
 /**
  * @swagger
- * /{username}/{slug}/more:
+ * /project/{username}/{slug}/more:
  *  get:
  *   tags:
  *    - Project

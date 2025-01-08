@@ -42,10 +42,10 @@ router.post('/checkUsername', validateCheckUsernameInput(), checkUsernameAvailab
 
 /**
  * @swagger
- * /profile:
+ * /user/profile:
  *  patch:
  *   tags:
- *    - UserProfile
+ *    - User Profile
  *   summary: Update user profile information
  *   requestBody:
  *    required: true
