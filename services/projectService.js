@@ -268,6 +268,144 @@ const searchTagsByKeyword = (keyword) => {
     )
 }
 
+const findProjectByAuthorAndSlug = async (username, slug) => {
+    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
+
+        const project = await projectModel.aggregate(
+        [
+            {
+                $match: {
+                    slug:  slug 
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorDetails'
+                }
+            },
+            {
+                $unwind: '$authorDetails'
+            },
+            {
+                $match: {
+                    'authorDetails.username': username,
+                },
+            },
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                        $cond: {
+                            if: { $ifNull: ['$thumbnail.s3Key', false] },
+                            then: { $concat: [s3BaseUrl, '$thumbnail.s3Key'] },
+                            else: null,
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    '__v': 0,
+                    'thumbnail.s3Key': 0,
+                    '_id': 0,
+                    'author': 0,
+                    'authorDetails.__v': 0,
+                    'authorDetails._id': 0,
+                    'authorDetails.password': 0,
+                    'authorDetails.createdAt': 0,
+                    'authorDetails.updatedAt': 0,
+                }
+            }   
+        ]
+    )
+
+    return project.length > 0 ? project[0] : null
+}
+
+const getPopularProjectsByAuthor = async (username, slug, limit, page) => {
+
+    const skip = (page - 1) *limit
+
+    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
+
+    const projects = await projectModel.aggregate(
+        [
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                        $cond: {
+                            if: { $ifNull: ["$thumbnail.s3Key", false] }, 
+                            then: { $concat: [
+                            s3BaseUrl,
+                            "$thumbnail.s3Key" 
+                            ] },
+                            else: null 
+                        }
+                    }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorDetails',
+                    pipeline: [
+                        { $match: { username: username } },
+                        { $project: { _id: 0, username: 1, name: 1, email: 1 } }
+                    ]
+                }
+            },
+            {
+                $unwind: '$authorDetails'
+            },
+            {
+                $match: {
+                    'authorDetails.username': username,
+                    slug: { $ne: slug }
+                }
+            },
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                        $cond: {
+                            if: { $ifNull: ['$thumbnail.s3Key', false] },
+                            then: { $concat: [s3BaseUrl, '$thumbnail.s3Key'] },
+                            else: null
+                        }
+                    }
+                }
+            },
+            {
+                $sort: {
+                    upvoteCount: -1,
+                    viewsCount: -1,
+                    createdAt: -1
+                }
+            },
+            {
+                $facet: {
+                    metadata: [{ $count: 'total' }],
+                    data: [{ $skip: skip }, { $limit: limit }]
+                }
+            },
+            {
+                $project: {
+                    total: { $arrayElemAt: ['$metadata.total', 0] },
+                    projects: '$data'
+                }
+            },
+            {
+                $unset: ['__v', 'thumbnail.s3Key', '_id', 'author']
+            }
+        ]
+    )
+
+    return projects
+}
+
 module.exports = {
     doesAuthorHaveProjectWithTitle,
     createNewProject,
@@ -275,5 +413,7 @@ module.exports = {
     searchProjectByKeyword,
     getFilteredProjects,
     searchAllTags,
-    searchTagsByKeyword
+    searchTagsByKeyword,
+    findProjectByAuthorAndSlug,
+    getPopularProjectsByAuthor
 }

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -233,5 +233,85 @@ router.get('/tags', getAllTags)
  */
 
 router.get('/tag', searchTags)
+
+
+/**
+ * @swagger
+ * /project/{username}/{slug}:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Retrieve a project by author's username and project slug
+ *   parameters:
+ *    - name: username
+ *      in: path
+ *      description: The username of the project author.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: johndoe
+ *    - name: slug
+ *      in: path
+ *      description: The unique slug identifier for the project.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: opportune
+ *   responses:
+ *    200:
+ *     description: Project found successfully
+ *    404:
+ *     description: Project not found
+ *    500:
+ *     description: Internal server error
+ */
+
+router.get('/:username/:slug', getProjectByUsernameAndSlug)
+
+
+/**
+ * @swagger
+ * /project/{username}/{slug}/more:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Retrieve more projects from the same author
+ *   parameters:
+ *    - name: username
+ *      in: path
+ *      description: The username of the author.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: johndoe
+ *    - name: slug
+ *      in: path
+ *      description: The slug of the current project.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: opportune
+ *    - name: limit
+ *      in: query
+ *      description: The number of projects to return.
+ *      required: false
+ *      schema:
+ *       type: integer
+ *       default: 10
+ *    - name: page
+ *      in: query
+ *      description: The page number for pagination.
+ *      required: false
+ *      schema:
+ *       type: integer
+ *       default: 1
+ *   responses:
+ *    200:
+ *     description: Successfully retrieved more projects by the author
+ *    500:
+ *     description: Internal server error
+ */
+
+router.get('/:username/:slug/more', getMoreProjects)
 
 module.exports = router

@@ -173,7 +173,7 @@ const projectSchema = new mongoose.Schema(
         githubLink: {
             type: String,
             required: [true, 'GitHub link is a mandatory field'],
-            match: [/^(http|https):\/\/github\.com\/[a-zA-Z0-9\-]+(\/[a-zA-Z0-9\-]+)*$/, 'GitHub link must be a valid URL'],
+            match: [/^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/, 'GitHub link must be a valid URL'],
         },
         hostedLink: {
             type: String,
