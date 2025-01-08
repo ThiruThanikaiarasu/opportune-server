@@ -268,6 +268,62 @@ const searchTagsByKeyword = (keyword) => {
     )
 }
 
+const findProjectByAuthorAndSlug = async (username, slug) => {
+    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
+
+        const project = await projectModel.aggregate(
+        [
+            {
+                $match: {
+                    slug:  slug 
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorDetails'
+                }
+            },
+            {
+                $unwind: '$authorDetails'
+            },
+            {
+                $match: {
+                    'authorDetails.username': username,
+                },
+            },
+            {
+                $addFields: {
+                    thumbnailUrl: {
+                        $cond: {
+                            if: { $ifNull: ['$thumbnail.s3Key', false] },
+                            then: { $concat: [s3BaseUrl, '$thumbnail.s3Key'] },
+                            else: null,
+                        },
+                    },
+                },
+            },
+            {
+                $project: {
+                    '__v': 0,
+                    'thumbnail.s3Key': 0,
+                    '_id': 0,
+                    'author': 0,
+                    'authorDetails.__v': 0,
+                    'authorDetails._id': 0,
+                    'authorDetails.password': 0,
+                    'authorDetails.createdAt': 0,
+                    'authorDetails.updatedAt': 0,
+                }
+            }   
+        ]
+    )
+
+    return project.length > 0 ? project[0] : null
+}
+
 const getPopularProjectsByAuthor = async (username, slug, limit, page) => {
 
     const skip = (page - 1) *limit
@@ -347,5 +403,6 @@ module.exports = {
     getFilteredProjects,
     searchAllTags,
     searchTagsByKeyword,
+    findProjectByAuthorAndSlug,
     getPopularProjectsByAuthor
 }

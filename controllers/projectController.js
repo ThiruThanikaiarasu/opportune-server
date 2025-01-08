@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 
@@ -113,6 +113,23 @@ const getAllTags = async (request, response) => {
     }
 }
 
+const getProjectByUsernameAndSlug = async (request, response) => {
+    const {username, slug} = request.params
+
+    try {
+        const project = await findProjectByAuthorAndSlug(username, slug)
+
+        if(!project) {
+            return response.status(404).send(setResponseBody("Project not found", "not_found", null))
+        }
+
+        response.status(200).send(setResponseBody("Project found", null, project))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 const getMoreProjects = async (request, response) => {
     const { username, slug } = request.params
     const { limit = 10,  page = 1} = request.query
@@ -136,5 +153,6 @@ module.exports = {
     filterProjects,
     searchTags,
     getAllTags,
+    getProjectByUsernameAndSlug,
     getMoreProjects
 }
