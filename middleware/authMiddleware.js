@@ -50,7 +50,7 @@ const verifyUser = async (request, response, next) => {
                     return response.status(401).send(setResponseBody("GitHub token expired or invalid", "authentication_error", null));
                 }
 
-                const { accessToken } = decoded;  
+                const { _id, accessToken } = decoded;  
                 try {
                     const githubResponse = await axios.get('https://api.github.com/user', {
                         headers: {
@@ -61,6 +61,7 @@ const verifyUser = async (request, response, next) => {
                     if (githubResponse.status === 200) {
                         const githubUser = githubResponse.data;
                         request.user = {
+                            _id: _id,
                             githubId: githubUser.id,
                             username: githubUser.login,
                             email: githubUser.email

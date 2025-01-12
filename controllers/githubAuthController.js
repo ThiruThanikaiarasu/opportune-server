@@ -10,9 +10,6 @@ const handleGitHubCallback = async (request, response) => {
     const { profile, accessToken } = request.user;
     try {
 
-        const token = jwt.sign({ accessToken },process.env.ACCESS_TOKEN,{ expiresIn: '30d' })
-        setTokenCookie(response,'githubAuthToken', token)
-
         const primaryEmail = profile.emails[0]?.value || 'No primary email found'; 
 
         const userData = {
@@ -23,19 +20,21 @@ const handleGitHubCallback = async (request, response) => {
         }
 
         const existingUser = await findUserByEmail(primaryEmail)
-
+        let newUser
         if(!existingUser)
         {
-            await createUser(userData)
+            newUser = await createUser(userData)
         }
+        
+        newUser = newUser || existingUser
+        const token = jwt.sign({ _id: newUser._id , accessToken: accessToken },process.env.ACCESS_TOKEN,{ expiresIn: '30d' })
+        setTokenCookie(response,'githubAuthToken', token)
 
         response.redirect(process.env.POST_AUTH_REDIRECT_URL);
     }
     catch(error)
     {
-        console.log(error)
-        console.error("Error during GitHub OAuth:", error);
-        response.status(500).json({ message: error.message });
+        return response.status(500).send(setResponseBody(error.message, "server_error", null));
     }
 }
 
