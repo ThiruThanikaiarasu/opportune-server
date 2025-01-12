@@ -17,7 +17,7 @@ jest.mock('../services/userService', () => ({
     createUser: jest.fn()
 }))
 
-jest.mock('../utils/tokenServices',()=> ({
+jest.mock('../utils/Services',()=> ({
     generateToken: jest.fn(),
     setTokenCookie: jest.fn()
 }))

@@ -10,7 +10,7 @@ const handleGitHubCallback = async (request, response) => {
     const { profile, accessToken } = request.user;
     try {
 
-        const token = jwt.sign({ accessToken },process.env.ACCESS_TOkEN,{ expiresIn: '30d' })
+        const token = jwt.sign({ accessToken },process.env.ACCESS_TOKEN,{ expiresIn: '30d' })
         setTokenCookie(response,'githubAuthToken', token)
 
         const primaryEmail = profile.emails[0]?.value || 'No primary email found'; 
@@ -33,8 +33,9 @@ const handleGitHubCallback = async (request, response) => {
     }
     catch(error)
     {
+        console.log(error)
         console.error("Error during GitHub OAuth:", error);
-        response.status(500).json({ message: "Authentication failed" });
+        response.status(500).json({ message: error.message });
     }
 }
 
