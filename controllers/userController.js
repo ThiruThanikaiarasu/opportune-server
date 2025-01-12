@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt')
+
 const { findUserNameAlreadyExists, findUserByEmail, updateUserPassword, updateUserProfileData } = require('../services/userService')
 const { validationResult } = require('express-validator')
 const { setResponseBody } = require('../utils/responseFormatter')
@@ -36,6 +38,11 @@ const resetPassword = async(request,response) => {
         if(!existingUser)
         {
             return response.status(400).send(setResponseBody("Invalid Operation", "user_not_found", null))
+        }
+
+        const isPasswordMatch = await bcrypt.compare(password, existingUser.password);
+        if (isPasswordMatch) {
+            return response.status(400).send(setResponseBody("The new password cannot be the same as the old password. Please choose a different password.", "password_error", null));
         }
 
         const userData = await updateUserPassword(existingUser, password)
