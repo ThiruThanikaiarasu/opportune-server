@@ -82,9 +82,9 @@ const otpSchema = new mongoose.Schema(
             minlength: [8, 'Password must be at least 8 characters long'],
             maxlength: [20, 'Password must not exceed 20 characters'],
             match: [
-                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>_])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,20}$/,
+                /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[ !"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~])[A-Za-z\d !"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]{8,20}$/,
                 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-              ],
+            ],
             default: null
         },
         otp: {
