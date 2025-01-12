@@ -140,12 +140,18 @@ const verifyOtp = async(request,response) => {
         if(!existingUser) 
         {
             const {name, username, password } = await findAuthUserByEmail(email)
-            newUser = await createUser(name, username, email, password)
+            let userData = {
+                name,
+                username,
+                email,
+                password
+            }
+            newUser = await createUser(userData)
         }
         
         const userData = existingUser || newUser
         const token = generateToken(userData)
-        setTokenCookie(response, token)
+        setTokenCookie(response, 'SessionID', token)
         
         let responseData = {
             name : userData.name,
@@ -182,7 +188,7 @@ const login = async(request, response) => {
         }
 
         const token = generateToken(existingUser)
-        setTokenCookie(response, token)
+        setTokenCookie(response, 'SessionID', token)
 
         let responseData = {
             name : existingUser.name,
@@ -204,7 +210,7 @@ const logout = async(request, response) =>{
         {
             if(userCookie.SessionID)
             {
-                clearTokenCookie(response)
+                clearTokenCookie(response, 'SessionID')
                 return response.status(201).send(setResponseBody("User has been Logout", null, null))
             }
             return response.status(400).send(setResponseBody("Invalid operation: No token found", null, null));

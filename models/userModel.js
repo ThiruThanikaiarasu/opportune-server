@@ -79,7 +79,7 @@ const userSchema = new mongoose.Schema(
             minlength: [1, 'First name must be at least 1 character long'],
             maxlength: [100, 'First name must not exceed 100 characters'],
             match: [
-              /^[A-Za-z\s]+$/, // Regex to allow only letters and spaces
+              /^[A-Za-z0-9\s]+$/, 
               'First name can only contain letters and spaces',
             ],
         },

@@ -8,19 +8,29 @@ const findUserByEmail = (email) => {
     return userModel.findOne({ email }).select('+password')
 }
 
-const createUser = async(name, username, email, password) => {
+const createUser = async ({ 
+    name, 
+    username, 
+    email, 
+    password = null, 
+    githubId = null, 
+    googleId = null 
+}) => {
 
     const user = new userModel({
         name,
         username,
         email,
-        password
-    })
-    
-    await user.save()
+        password,
+        githubId,
+        googleId
+    });
 
-    return user
-}
+    await user.save();
+
+    return user;
+};
+
 
 const findUserNameAlreadyExists = async (username) => {
     return await userModel.exists({ username })
