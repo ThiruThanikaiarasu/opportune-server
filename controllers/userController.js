@@ -42,7 +42,7 @@ const resetPassword = async(request,response) => {
 
         const isPasswordMatch = await bcrypt.compare(password, existingUser.password);
         if (isPasswordMatch) {
-            return response.status(400).send(setResponseBody("The new password cannot be the same as the old password. Please choose a different password.", "password_error", null));
+            return response.status(409).send(setResponseBody("The new password cannot be the same as the old password. Please choose a different password.", "password_error", null));
         }
 
         const userData = await updateUserPassword(existingUser, password)

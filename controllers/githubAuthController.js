@@ -19,6 +19,10 @@ const handleGitHubCallback = async (request, response) => {
         }
 
         const existingUser = await findUserByEmail(primaryEmail)
+        if (existingUser && existingUser.password) {
+            return response.status(409).send(setResponseBody("Email already exists with a basic login. Please log in using your email and password.", "email_exists_with_basic_login", null));
+        }
+
         let newUser
         if(!existingUser)
         {

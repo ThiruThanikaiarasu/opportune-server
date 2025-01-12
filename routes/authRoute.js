@@ -109,11 +109,11 @@ router.post('/resendOtp', validateResendOtpRequest(), sendVerificationCode)
  *       201:
  *         description: OTP sent successfully
  *       400:
- *         description: Invalid Operation
+ *         description: Invalid Operation or Validation Error
  *       401:
  *         description: Session expires Signup Again
- *       409:
- *         description: Conflict, User already exists
+ *       404:
+ *         description: The user is not found in the system with the given email( Invalid Email Address )
  *       429:
  *         description: Too many attempts
  *       500:
@@ -184,9 +184,11 @@ router.post('/verifyOtp', validateVerifyOtpRequest(), verifyOtp)
  *       200:
  *         description: Logged in successfully
  *       400:
- *         description: Bad Request (Validation error)
+ *         description: Bad Request (validation error or invalid operation)
  *       401:
  *         description: Unauthorized (Invalid email or password)
+ *       404:
+ *         description: The user is not found in the system with the given email( Invalid Email Address )
  *       500:
  *         description: Internal server error
  */

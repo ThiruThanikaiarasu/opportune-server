@@ -92,7 +92,11 @@ const sendForgotPasswordOtp = async(request, response) =>{
         const existingUser = await findUserByEmail(email)
         if(!existingUser) 
         {
-            return response.status(400).send(setResponseBody("Invalid Operation","user_not_found",null))
+            return response.status(404).send(setResponseBody("Invalid Operation","user_not_found",null))
+        }
+
+        if (existingUser.githubId && !existingUser.password) {
+            return response.status(400).send(setResponseBody("GitHub login users cannot reset the password", "github_login_error", null));
         }
 
         const existingOtpUser = await findAuthUserByEmail(email)
@@ -179,7 +183,11 @@ const login = async(request, response) => {
 
         const existingUser = await findUserByEmail(email)
         if(!existingUser) {
-            return response.status(401).send(setResponseBody("Invalid email address", "invalid_email", null))
+            return response.status(404).send(setResponseBody("Invalid email address", "invalid_email", null))
+        }
+
+        if (existingUser.githubId && !existingUser.password) {
+            return response.status(400).send(setResponseBody("GitHub login users cannot log in with a password", "github_login_error", null));
         }
 
         const validatePassword = await bcrypt.compare(password, existingUser.password)

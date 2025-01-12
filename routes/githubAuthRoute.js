@@ -38,10 +38,13 @@ router.get("/login", authenticateWithGitHub);
  *       200:
  *         description: "Successfully authenticated, user data retrieved"
  *       400:
- *         description: "Bad Request"
+ *         description: "Bad Request - The OAuth code was missing or invalid"
+ *       409:
+ *         description: "Conflict - Email already exists with a basic login. Please log in using your email and password."
  *       500:
- *         description: "Authentication failed"
+ *         description: "Internal Server Error - Authentication failed due to a server issue"
  */
+
 
 router.get("/callback", authenticateWithGitHub, handleGitHubCallback);
 

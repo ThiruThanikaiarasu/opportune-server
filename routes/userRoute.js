@@ -69,6 +69,8 @@ router.post('/checkUsername', validateCheckUsernameInput(), checkUsernameAvailab
  *         description: Password reset successfully
  *       400:
  *         description: Bad Request (validation error or invalid operation)
+ *       409:
+ *         description: The new password cannot be the same as the old password
  *       500:
  *         description: Internal server error
  */
