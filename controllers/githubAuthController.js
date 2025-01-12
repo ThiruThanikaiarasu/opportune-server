@@ -1,9 +1,8 @@
 const axios = require('axios')
 const jwt = require('jsonwebtoken');
-const passport = require('passport')
 
 const { createUser, findUserByEmail} = require('../services/userService')
-const { setTokenCookie, clearTokenCookie } = require('../utils/tokenServices')
+const { setTokenCookie } = require('../utils/tokenServices')
 const { setResponseBody } = require('../utils/responseFormatter')
 
 const handleGitHubCallback = async (request, response) => {
@@ -38,24 +37,4 @@ const handleGitHubCallback = async (request, response) => {
     }
 }
 
-const logoutUser = (request, response) => {
-    try {
-        const userCookie = request.cookies;
-
-        if (Object.keys(userCookie).length !== 0) {
-            if (userCookie.githubAuthToken) {
-                clearTokenCookie(response, 'githubAuthToken');
-                return response.status(200).send(setResponseBody("User has been logged out", null, null));
-            } else {
-                return response.status(400).send(setResponseBody("Invalid operation: No GitHub token found", null, null));
-            }
-        }
-
-        return response.status(204).send(setResponseBody("No active session found", null, null));
-    } catch (error) {
-        return response.status(500).send(setResponseBody(error.message, "server_error", null));
-    }
-};
-
-
-module.exports = { handleGitHubCallback, logoutUser };
+module.exports = { handleGitHubCallback };

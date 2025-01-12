@@ -203,25 +203,29 @@ const login = async(request, response) => {
     }
 }
 
-const logout = async(request, response) =>{
-    try{
-        const userCookie = request.cookies
-        if(Object.keys(userCookie).length != 0)
-        {
-            if(userCookie.SessionID)
-            {
-                clearTokenCookie(response, 'SessionID')
-                return response.status(201).send(setResponseBody("User has been Logout", null, null))
+const logout = async(request, response) => {
+    try {
+        const userCookie = request.cookies;
+
+        if (Object.keys(userCookie).length !== 0) {
+            if (userCookie.SessionID) {
+                clearTokenCookie(response, 'SessionID');
+                return response.status(200).send(setResponseBody("User has been logged out (SessionID)", null, null));
+            } 
+            if (userCookie.githubAuthToken) {
+                clearTokenCookie(response, 'githubAuthToken');
+                return response.status(200).send(setResponseBody("User has been logged out (GitHub)", null, null));
             }
-            return response.status(400).send(setResponseBody("Invalid operation: No token found", null, null));
+
+            return response.status(400).send(setResponseBody("Invalid operation: No valid token found", "invalid_token_error", null));
         }
-        return response.status(204).send(setResponseBody("No active session found", null, null));
+
+        return response.status(204).send(setResponseBody("No active session found", "no_session_error", null));
+    } catch (error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null));
     }
-    catch(error)
-    {
-        return response.status(500).send(setResponseBody(error.message, "server_error", null))
-    }
-}
+};
+
 module.exports = {
     signup,
     sendVerificationCode,

@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const passport = require('passport')
 
-const { handleGitHubCallback, logoutUser } = require("../controllers/githubAuthController");
+const { handleGitHubCallback } = require("../controllers/githubAuthController");
 const { authenticateWithGitHub } = require('../middleware/githubAuthMiddleware')
 
 /**
@@ -45,22 +44,5 @@ router.get("/login", authenticateWithGitHub);
  */
 
 router.get("/callback", authenticateWithGitHub, handleGitHubCallback);
-
-/**
- * @swagger
- * /auth/github/logout:
- *   get:
- *     tags:
- *       - "GitHub Authentication"
- *     summary: "Logout User"
- *     description: "Logs the user out by clearing the session."
- *     responses:
- *       200:
- *         description: "User logged out successfully"
- *       500:
- *         description: "Logout failed"
- */
-
-router.post("/logout", logoutUser);
 
 module.exports = router;
