@@ -22,9 +22,41 @@ jobs:
                     docker build -t opportune-server -t thiruthanikaiarasu/opportune-server:0.0.0 .
                     echo $DOCKER_PASSWORD | docker login -u thiruthanikaiarasu --password-stdin
                     docker push thiruthanikaiarasu/opportune-server:0.0.0
+    
+    deploy_to_ec2:
+        docker:
+            - image: circleci/python:3.8
+        steps: 
+            - checkout 
+            - setup_remote_docker:
+                docker_layer_caching: false
+            - run: 
+                name: Install SSH Client 
+                command: sudo apt-get install -y openssh-client 
+            - run: 
+                name: Add SSH private key for ec2
+                command: |
+                    mkdir -p ~/.ssh
+                    echo "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+                    chmod 600 ~/.ssh/id_rsa
+            - run:
+                name: SSH and Pull Docker Image
+                command: |
+                    ssh -o StrictHostKeyChecking=no ec2-user@3.109.123.71 "docker pull thiruthanikaiarasu/opportune-server:0.0.0"
+            - run:
+                name: SSH and Stop/Remove Container
+                command: |
+                    ssh -o StrictHostKeyChecking=no ec2-user@3.109.123.71 "docker stop my-container || true && docker rm my-container || true"
+            - run:
+                name: SSH and Run Docker Container
+                command: |
+                    ssh -o StrictHostKeyChecking=no ec2-user@3.109.123.71 "docker run -d -p 80:3500 --name my-container thiruthanikaiarasu/opportune-server:0.0.0"
 
 workflows:
     build_test:
         jobs:
             - build
             - build_docker_image
+            - deploy_to_ec2:
+                requires:
+                  - build_docker_image
