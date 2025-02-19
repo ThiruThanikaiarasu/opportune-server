@@ -25,6 +25,7 @@ const verifyUser = async (request, response, next) => {
         const cookies = parseCookies(authHeader);
         const sessionId = cookies.SessionID;
         const githubAuthToken = cookies.githubAuthToken; 
+        const googleAuthToken = cookies.googleAuthToken
 
         if (sessionId) {
             
@@ -75,7 +76,41 @@ const verifyUser = async (request, response, next) => {
                     return response.status(401).send(setResponseBody("GitHub authentication error", "authentication_error", null));
                 }
             });
-        } else {
+        }
+        else if(googleAuthToken) {
+
+            jwt.verify(googleAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
+                if (error) {
+                    return response.status(401).send(setResponseBody("Google token expired or invalid", "authentication_error", null));
+                }
+
+                const { _id, accessToken } = decoded;  
+                try {
+                    const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`  
+                        }
+                    });
+
+                    if (googleResponse.status === 200) {
+                        const googleUser = googleResponse.data;
+                        request.user = {
+                            _id: _id,
+                            githubId: googleUser.id,
+                            username: googleUser.login,
+                            email: googleUser.email
+                        };
+
+                        return next();  
+                    } else {
+                        return response.status(401).send(setResponseBody("Google authentication failed", "authentication_error", null));
+                    }
+                } catch (error) {
+                    return response.status(401).send(setResponseBody("Google authentication error", "authentication_error", null));
+                }
+            });
+        } 
+        else {
             return response.status(401).send(setResponseBody("No valid authentication token found", "authentication_error", null));
         }
     } catch (error) {

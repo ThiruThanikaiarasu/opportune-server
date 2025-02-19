@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const { handleGitHubCallback } = require("../controllers/githubAuthController");
-const { authenticateWithGitHub } = require('../middleware/githubAuthMiddleware')
+const { authenticateWithGitHub } = require('../middleware/oauthMiddleware')
 
 /**
  * @swagger
