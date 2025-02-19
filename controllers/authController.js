@@ -220,11 +220,14 @@ const logout = async(request, response) => {
                 clearTokenCookie(response, 'SessionID');
                 return response.status(200).send(setResponseBody("User has been logged out (SessionID)", null, null));
             } 
-            if (userCookie.githubAuthToken) {
+            else if (userCookie.githubAuthToken) {
                 clearTokenCookie(response, 'githubAuthToken');
                 return response.status(200).send(setResponseBody("User has been logged out (GitHub)", null, null));
             }
-
+            else if (userCookie.googleAuthToken) {
+                clearTokenCookie(response, 'googleAuthToken');
+                return response.status(200).send(setResponseBody("User has been logged out (Google)", null, null));
+            }
             return response.status(400).send(setResponseBody("Invalid operation: No valid token found", "invalid_token_error", null));
         }
 

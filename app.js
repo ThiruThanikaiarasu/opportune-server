@@ -13,6 +13,7 @@ const authRoute = require('./routes/authRoute')
 const projectRoute = require('./routes/projectRoute')
 const userRoute = require('./routes/userRoute')
 const githubAuthRoute = require('./routes/githubAuthRoute')
+const googleAuthRoute = require('./routes/googleAuthRoute')
 const { CSS_URL } = require('./configurations/constants')
 
 app.use(cors({
@@ -33,4 +34,6 @@ app.use('/api/v1/auth',authRoute)
 app.use('/api/v1/project', projectRoute)
 app.use('/api/v1/user', userRoute)
 app.use('/api/v1/auth/github',githubAuthRoute);
+app.use('/api/v1/auth/google',googleAuthRoute);
+
 module.exports = app

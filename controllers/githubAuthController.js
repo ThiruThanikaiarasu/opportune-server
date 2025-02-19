@@ -1,10 +1,9 @@
-const axios = require('axios')
 const jwt = require('jsonwebtoken');
 
 const { createUser, findUserByEmail} = require('../services/userService')
 const { setTokenCookie } = require('../utils/tokenServices')
 const { setResponseBody } = require('../utils/responseFormatter')
-
+const { generateUsername } = require('../utils/usernameGenerator')
 const handleGitHubCallback = async (request, response) => {
     const { profile, accessToken } = request.user;
     try {
@@ -13,7 +12,6 @@ const handleGitHubCallback = async (request, response) => {
 
         const userData = {
             name: profile._json.name || profile._json.login,  
-            username: profile._json.login,
             email: primaryEmail,
             githubId: profile._json.id
         }
@@ -26,6 +24,7 @@ const handleGitHubCallback = async (request, response) => {
         let newUser
         if(!existingUser)
         {
+            userData.username = await generateUsername(userData.name)
             newUser = await createUser(userData)
         }
         

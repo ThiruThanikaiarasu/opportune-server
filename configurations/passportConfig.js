@@ -1,5 +1,6 @@
 const passport = require('passport');
 const GitHubStrategy = require("passport-github2").Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 require("dotenv").config();
 
@@ -15,6 +16,20 @@ passport.use(
       return done(null, { profile, accessToken });
     }
   )
-);
+)
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
+      scope: ['profile', 'email']
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, { profile, accessToken });
+    }
+  )
+)
 
 module.exports = passport;
