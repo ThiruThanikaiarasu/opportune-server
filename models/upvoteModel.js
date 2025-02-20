@@ -40,8 +40,8 @@ const upvoteSchema = new mongoose.Schema(
             ref: 'users'
         },
         upvoteFor: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'projects'
+            type: String,
+            required: [true, "Project Slug is a mandatory for upvote"]
         }
     }, 
     {

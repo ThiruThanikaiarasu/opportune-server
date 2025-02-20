@@ -1,8 +1,9 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
+const { default: mongoose } = require('mongoose')
 
 
 const addANewProject = async (request, response) => {
@@ -146,6 +147,73 @@ const getMoreProjects = async (request, response) => {
     }
 }
 
+const handleUpvote = async (request, response) => {
+    const { projectSlug } = request.params
+    const userId = request.user._id
+
+    const session = await mongoose.startSession()
+    
+    session.startTransaction()
+
+    try {
+
+        const existingVote = await findVote(projectSlug, userId)
+
+        if(existingVote) {
+            await session.abortTransaction()
+            session.endSession()
+            return response.status(400).send(setResponseBody("Already upvoted", "duplicate_upvote", null))
+        }
+        
+        await createVote(projectSlug, userId, session)
+        await updateProjectVoteCount(projectSlug, 1, session) 
+
+        await session.commitTransaction()
+        session.endSession()
+
+        return response.status(200).send(setResponseBody("Upvote added successfully", null, null))
+        
+    }
+    catch(error) {
+        await session.abortTransaction()
+        session.endSession()
+
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const handleRemoveUpvote = async (request, response) => {
+    const { projectSlug } = request.params
+    const userId = request.user._id
+    const session = await mongoose.startSession()
+    
+    session.startTransaction() 
+
+    try {
+        const existingVote = await findVote(projectSlug, userId)
+
+        if (!existingVote) {
+            await session.abortTransaction()
+            session.endSession()
+            return response.status(400).send(setResponseBody("Upvote not found", "upvote_not_found", null))
+        }
+
+        await deleteVote(projectSlug, userId, session)
+        await updateProjectVoteCount(projectSlug, -1, session)
+
+        await session.commitTransaction()
+        session.endSession()
+
+        return response.status(200).send(setResponseBody("Upvote removed successfully", null, null))
+    }
+    catch (error) {
+        await session.abortTransaction()
+        session.endSession()
+
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     addANewProject,
     homeFeed,
@@ -154,5 +222,7 @@ module.exports = {
     searchTags,
     getAllTags,
     getProjectByUsernameAndSlug,
-    getMoreProjects
+    getMoreProjects,
+    handleUpvote,
+    handleRemoveUpvote
 }

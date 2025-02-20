@@ -1,6 +1,7 @@
 const UploadError = require('../errors/UploadError')
 const projectModel = require('../models/projectModel')
 const projectTagModel = require('../models/projectTagModel')
+const upvoteModel = require('../models/upvoteModel')
 const { uploadToS3 } = require('./s3Service')
 
 
@@ -406,6 +407,47 @@ const getPopularProjectsByAuthor = async (username, slug, limit, page) => {
     return projects
 }
 
+const findProjectBySlug = (slug) => {
+    return projectModel.findOne({ slug })
+}
+
+const createVote = async (projectSlug, userId, session) => {
+    const project = await findProjectBySlug(projectSlug)
+    if (!project) {
+        throw new Error('Project not found')
+    }
+
+    const newVote = new upvoteModel({
+        upvoteBy: userId,
+        upvoteFor: projectSlug
+    })
+
+    await newVote.save({ session })
+
+}
+
+const updateProjectVoteCount = async (projectSlug, incrementValue, session) => {
+    const project = await findProjectBySlug(projectSlug)
+    if (!project) {
+        throw new Error('Project not found')
+    }
+
+    await projectModel.updateOne(
+        { slug: projectSlug },
+        { $inc: { upvoteCount: incrementValue } },
+        { session } 
+    )
+}
+
+const findVote = (projectSlug, userId) => {
+    return upvoteModel.findOne({ upvoteFor: projectSlug, upvoteBy: userId })
+}
+
+const deleteVote = (projectSlug, userId, session) => {
+    return upvoteModel.findOneAndDelete({ upvoteFor: projectSlug, upvoteBy: userId }).session(session)
+}
+
+
 module.exports = {
     doesAuthorHaveProjectWithTitle,
     createNewProject,
@@ -415,5 +457,9 @@ module.exports = {
     searchAllTags,
     searchTagsByKeyword,
     findProjectByAuthorAndSlug,
-    getPopularProjectsByAuthor
+    getPopularProjectsByAuthor,
+    createVote,
+    updateProjectVoteCount,
+    findVote,
+    deleteVote
 }

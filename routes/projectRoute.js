@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -313,5 +313,63 @@ router.get('/:username/:slug', getProjectByUsernameAndSlug)
  */
 
 router.get('/:username/:slug/more', getMoreProjects)
+
+
+/**
+ * @swagger
+ * /project/{projectSlug}/upvote:
+ *  post:
+ *   tags:
+ *    - Project
+ *   summary: Upvote a project
+ *   parameters:
+ *    - name: projectSlug
+ *      in: path
+ *      description: The slug of the project to upvote.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: opportune
+ *   security:
+ *    - bearerAuth: []
+ *   responses:
+ *    200:
+ *     description: Successfully upvoted the project
+ *    401:
+ *     description: Unauthorized, invalid or missing token
+ *    500:
+ *     description: Internal server error
+ */
+
+router.post('/:projectSlug/upvote', verifyUser, handleUpvote)
+
+
+/**
+ * @swagger
+ * /project/{projectSlug}/upvote:
+ *  delete:
+ *   tags:
+ *    - Project
+ *   summary: Remove upvote from a project
+ *   parameters:
+ *    - name: projectSlug
+ *      in: path
+ *      description: The slug of the project to remove the upvote from.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: opportune
+ *   security:
+ *    - bearerAuth: []
+ *   responses:
+ *    200:
+ *     description: Successfully removed the upvote from the project
+ *    401:
+ *     description: Unauthorized, invalid or missing token
+ *    500:
+ *     description: Internal server error
+ */
+
+router.delete('/:projectSlug/upvote', verifyUser, handleRemoveUpvote)
 
 module.exports = router
