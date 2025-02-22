@@ -25,6 +25,7 @@ const mongoose = require('mongoose')
  *        - size
  *        - mimetype
  *        - s3Key
+ *        - externalLink
  *       properties:
  *        originalname: 
  *         type: string
@@ -42,6 +43,10 @@ const mongoose = require('mongoose')
  *         type: string
  *         description: The URL of the project's thumbnail image stored in AWS S3 after the file upload.
  *         example: 'https://s3.amazonaws.com/bucket-name/thumbnail.jpg'
+ *        externalLink:
+ *         type: string
+ *         description: The URL of the profile picture from an external source.
+ *         example: 'https://lh3.googleusercontent.com/a/profile-image'
  *     portfolioLink:
  *       type: string
  *       description: A link to the user's portfolio website.
@@ -118,6 +123,14 @@ const userProfileSchema = new mongoose.Schema(
             s3Key: {
                 type: String,
                 trim: true,
+            },
+            externalLink: {
+                type: String,
+                trim: true,
+                match: [
+                    /^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/,
+                    'External link must be a valid URL'
+                ]
             }
         },
         portfolioLink: {
