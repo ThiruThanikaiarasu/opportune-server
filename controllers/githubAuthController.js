@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 
-const { createUser, findUserByEmail} = require('../services/userService')
+const { createUser, findUserByEmail, updateUser } = require('../services/userService')
 const { setTokenCookie } = require('../utils/tokenServices')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { generateUsername } = require('../utils/usernameGenerator')
+
 const handleGitHubCallback = async (request, response) => {
     const { profile, accessToken } = request.user;
     try {
@@ -17,15 +18,17 @@ const handleGitHubCallback = async (request, response) => {
         }
 
         const existingUser = await findUserByEmail(primaryEmail)
-        if (existingUser && existingUser.password) {
-            return response.status(409).send(setResponseBody("Email already exists with a basic login. Please log in using your email and password.", "email_exists_with_basic_login", null));
-        }
 
         let newUser
         if(!existingUser)
         {
             userData.username = await generateUsername(userData.name)
             newUser = await createUser(userData)
+        }
+
+        if(!existingUser.githubId)
+        {
+            await updateUser(existingUser, { githubId : userData.githubId })
         }
         
         newUser = newUser || existingUser

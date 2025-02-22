@@ -36,15 +36,21 @@ const findUserNameAlreadyExists = async (username) => {
     return await userModel.exists({ username })
 }
 
-const updateUserPassword = async( user, password ) => {
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
+const updateUser = async (user, updates) => {
+    if (updates.password) {
+        const salt = await bcrypt.genSalt(10); 
+        const hashedPassword = await bcrypt.hash(updates.password, salt); 
+        user.password = hashedPassword; 
+    }
 
-    user.password = hashedPassword
-    await user.save();
-    
-    return user
-}
+    const { password, ...otherUpdates } = updates;
+
+    Object.assign(user, otherUpdates);
+
+    await user.save(); 
+    return user; 
+};
+
 
 const updateUserProfileData = async ({_id, email}, profileData, profilePicture) => {
     let userProfile = await userProfileModel.findOne({ author: _id })
@@ -84,6 +90,6 @@ module.exports = {
     findUserByEmail,
     createUser,
     findUserNameAlreadyExists,
-    updateUserPassword,
+    updateUser,
     updateUserProfileData
 }
