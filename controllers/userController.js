@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt')
 
-const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData } = require('../services/userService')
+const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData } = require('../services/userService')
 const { validationResult } = require('express-validator')
 const { setResponseBody } = require('../utils/responseFormatter')
 
@@ -63,6 +63,18 @@ const resetPassword = async(request,response) => {
     }
 }
 
+const getUserProfile = async (request, response) => {
+    const userId = request.user._id
+    try {
+        const userProfile = await fetchUserProfileData(userId)
+
+        response.status(200).send(setResponseBody("User data fetched", null, userProfile))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 const updateUserProfile = async (request, response) => {
     const user = request.user
     const profileData = request.body
@@ -81,5 +93,6 @@ const updateUserProfile = async (request, response) => {
 module.exports = {
     checkUsernameAvailability,
     resetPassword,
+    getUserProfile,
     updateUserProfile
 }
