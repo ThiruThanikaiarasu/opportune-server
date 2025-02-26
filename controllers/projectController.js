@@ -45,7 +45,8 @@ const homeFeed = async (request, response) => {
     const pageInt = parseInt(page, 10)
 
     try {
-        const projects = await getHomeFeedProjects(limitInt, pageInt)
+        const userId = request.isAuthenticated ? request.user._id : null
+        const projects = await getHomeFeedProjects(limitInt, pageInt, userId)
 
         response.status(200).send(setResponseBody("Home feed projects", null, projects))
     }

@@ -15,6 +15,16 @@ const parseCookies = (cookieString) => {
     }, {})
 }
 
+const optionalVerify = (request, response, next) => {
+    const authHeader = request.headers['cookie'];
+    if (!authHeader) {
+        request.isAuthenticated = false
+        return next()
+    }
+
+    verifyUser(request, response, next)
+}
+
 const verifyUser = async (request, response, next) => {
     try {
         const authHeader = request.headers['cookie'];
@@ -41,6 +51,7 @@ const verifyUser = async (request, response, next) => {
                     email: user.email
                 };
 
+                request.isAuthenticated = true
                 return next();  
             });
         }
@@ -68,6 +79,7 @@ const verifyUser = async (request, response, next) => {
                             email: githubUser.email
                         };
 
+                        request.isAuthenticated = true
                         return next();  
                     } else {
                         return response.status(401).send(setResponseBody("GitHub authentication failed", "authentication_error", null));
@@ -101,6 +113,7 @@ const verifyUser = async (request, response, next) => {
                             email: googleUser.email
                         };
 
+                        request.isAuthenticated = true
                         return next();  
                     } else {
                         return response.status(401).send(setResponseBody("Google authentication failed", "authentication_error", null));
@@ -122,5 +135,6 @@ const verifyUser = async (request, response, next) => {
 
 
 module.exports = {
+    optionalVerify,
     verifyUser
 }

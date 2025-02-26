@@ -55,66 +55,131 @@ const createNewProject = async (author, title, description, tags, githubLink, ho
     }
 }
 
-const getHomeFeedProjects = async (limit, page) => {
-
-    const skip = (page - 1)* limit
-
+const getHomeFeedProjects = async (limit, page, userId = null) => { 
+    const skip = (page - 1) * limit 
     const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
     
-    const projects = await projectModel.aggregate(
-        [
-            {
-                $addFields: {
-                    thumbnailUrl: {
-                      $cond: {
-                        if: { $ifNull: ["$thumbnail.s3Key", false] }, 
-                        then: { $concat: [
-                          s3BaseUrl,
-                          "$thumbnail.s3Key" 
-                        ] },
-                        else: null 
-                      }
+    const pipeline = [ 
+        { 
+            $addFields: { 
+                thumbnailUrl: { 
+                    $cond: { 
+                        if: { $ifNull: ["$thumbnail.s3Key", false] },  
+                        then: { $concat: [ 
+                            s3BaseUrl, 
+                            "$thumbnail.s3Key"  
+                        ] }, 
+                        else: null  
+                    } 
+                },
+                isUserLiked: false
+            } 
+        },
+        { 
+            $lookup: { 
+                from: 'users',            
+                localField: 'author',     
+                foreignField: '_id', 
+                as: 'authorDetails' 
+            } 
+        }, 
+        { 
+            $unwind: '$authorDetails' 
+        }
+    ]
+    
+    if (userId) {
+        pipeline.push({
+            $lookup: {
+                from: 'upvotes',
+                let: { projectSlug: '$slug' },
+                pipeline: [
+                    { 
+                        $match: { 
+                            $expr: { 
+                                $and: [
+                                    { $eq: ['$upvoteFor', '$$projectSlug'] },
+                                    { $eq: ['$upvoteBy', userId] }
+                                ]
+                            }
+                        }
                     }
-                  }
-            },
-            {
-                $lookup: {
-                    from: 'users',           
-                    localField: 'author',    
-                    foreignField: '_id',
-                    as: 'authorDetails'
-                }
-            },
-            {
-                $unwind: '$authorDetails'
-            },
-            {
-                $sort: {
-                    upvoteCount: -1,
-                    createdAt: -1
-                }
-            },
-            { 
-                $skip: skip 
-            }, 
-            { 
-                $limit: limit 
-            },
-            {
-                $project: {
-                    __v0: 0,
-                    'thumbnail.s3Key': 0,
-                    _id: 0,
-                    'authorDetails.__v': 0,
-                    'authorDetails._id': 0,
-                    'authorDetails.password': 0,
-                    'authorDetails.createdAt': 0,
-                    'authorDetails.updatedAt': 0,
+                ],
+                as: 'userUpvotes'
+            }
+        })
+        
+        pipeline.push({
+            $addFields: {
+                isUserLiked: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
+            }
+        })
+        
+        pipeline.push({
+            $project: {
+                userUpvotes: 0
+            }
+        })
+
+        pipeline.push({
+            $lookup: {
+                from: 'userprofiles',
+                localField: 'author',
+                foreignField: 'author',
+                as: 'authorProfile'
+            }
+        })
+
+        pipeline.push({
+            $unwind: { 
+                path: '$authorProfile', 
+                preserveNullAndEmptyArrays: true 
+            }
+        })
+
+        pipeline.push({
+            $addFields: {
+                'authorDetails.profilePicture': { 
+                    $cond: { 
+                        if: { $ifNull: ['$authorProfile.profilePicture.s3Key', false] }, 
+                        then: { $concat: [s3BaseUrl, '$authorProfile.profilePicture.s3Key'] }, 
+                        else: null 
+                    } 
                 }
             }
-        ]
+        })
+    }
+    
+    pipeline.push(
+        { 
+            $sort: { 
+                upvoteCount: -1, 
+                createdAt: -1 
+            } 
+        }, 
+        {  
+            $skip: skip  
+        },  
+        {  
+            $limit: limit  
+        }, 
+        { 
+            $project: { 
+                __v: 0, 
+                'thumbnail': 0, 
+                _id: 0, 
+                'authorDetails.__v': 0, 
+                'authorDetails._id': 0, 
+                'authorDetails.password': 0, 
+                'authorDetails.createdAt': 0, 
+                'authorDetails.updatedAt': 0,
+                'authorProfile': 0
+            } 
+        }
     )
-
+    
+    const projects = await projectModel.aggregate(pipeline)
+    
     return projects
 }
 

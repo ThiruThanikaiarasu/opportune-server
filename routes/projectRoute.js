@@ -3,7 +3,7 @@ const router = express.Router()
 
 const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
-const { verifyUser } = require('../middleware/authMiddleware')
+const { verifyUser, optionalVerify } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
 
 
@@ -99,7 +99,7 @@ router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputVal
  */
 
 
-router.get('/home', homeFeed)
+router.get('/home', optionalVerify, homeFeed)
 
 
 /**
