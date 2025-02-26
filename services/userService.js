@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const userModel = require('../models/userModel')
 const userProfileModel = require('../models/userProfileModel')
 const { uploadToS3, deleteFromS3 } = require('./s3Service')
+const { S3_BASE_URL } = require('../configurations/constants')
 
 const findUserByEmail = (email) => {
     return userModel.findOne({ email }).select('+password')
@@ -63,22 +64,21 @@ const updateUserProfileData = async ({_id, email}, profileData, profilePicture) 
             }
         ) 
     } else {
-        Object.assign(userProfile, profileData)
+        Object.keys(profileData).forEach(key => {
+            if (profileData[key] !== undefined) {
+                userProfile[key] = profileData[key]
+            }
+        })
     }
 
     if(profilePicture) {
-        if(userProfile.profilePicture && userProfile.profilePicture.s3Key) {
-            await deleteFromS3(userProfile.profilePicture.s3Key)
+        if(userProfile.profilePicture) {
+            await deleteFromS3(userProfile.profilePicture)
         }
 
         const thumbnailS3Key = await uploadToS3(profilePicture)
 
-        userProfile.profilePicture = {
-            originalname: profilePicture.originalname,
-            size: profilePicture.size,
-            mimetype: profilePicture.mimetype,
-            s3Key: thumbnailS3Key
-        }
+        userProfile.profilePicture = S3_BASE_URL + thumbnailS3Key
     }
 
     await userProfile.save()

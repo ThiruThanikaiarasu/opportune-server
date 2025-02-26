@@ -166,3 +166,10 @@ const userProfileSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model('userProfiles', userProfileSchema)
+
+userProfileSchema.pre('validate', function(next) {
+    if (!this.resumeLink && !this.resumeFile) {
+        return next(new Error('Either Resume Link or Resume File is required'))
+    }
+    next()
+})
