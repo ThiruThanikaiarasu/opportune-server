@@ -8,74 +8,63 @@ const mongoose = require('mongoose')
  *    type: object
  *    required: 
  *     - author
+ *     - professionalTitle
+ *     - professionalExperience
+ *     - bio
+ *     - passedOutYear
  *    properties: 
  *     author: 
  *      type: string 
  *      description: The unique identifier of the user who owns the profile.
  *      example: 60d0fe4f5311236168a109ca
+ *     professionalTitle:
+ *      type: string
+ *      description: The user's professional title or designation.
+ *      example: 'Full Stack Developer'
  *     bio: 
  *      type: string 
  *      description: A short biography about the user.
- *      example: 'Passionate web developer with a focus on MERN stack projects.'
- *      maxLength: 300
+ *      example: 'Passionate web developer with expertise in the MERN stack.'
+ *      maxLength: 200
  *     profilePicture:
- *       type: object
- *       required: 
- *        - originalname
- *        - size
- *        - mimetype
- *        - s3Key
- *        - externalLink
- *       properties:
- *        originalname: 
- *         type: string
- *         description: Originalname of the uploaded file.
- *         example: photo1
- *        size: 
- *         type: number
- *         description: Size of the uploaded file (in bytes).
- *         example: 500
- *        mimetype: 
- *         type: string
- *         description: Mimetype of the uploaded file.
- *         example: image/png
- *        s3Key: 
- *         type: string
- *         description: The URL of the project's thumbnail image stored in AWS S3 after the file upload.
- *         example: 'https://s3.amazonaws.com/bucket-name/thumbnail.jpg'
- *        externalLink:
- *         type: string
- *         description: The URL of the profile picture from an external source.
- *         example: 'https://lh3.googleusercontent.com/a/profile-image'
+ *      type: string
+ *      description: The URL of the user's profile picture.
+ *      example: 'https://lh3.googleusercontent.com/a/profile-image'
  *     portfolioLink:
- *       type: string
- *       description: A link to the user's portfolio website.
- *       example: 'https://myportfolio.com'
+ *      type: string
+ *      description: A link to the user's portfolio website.
+ *      example: 'https://myportfolio.com'
  *     resumeLink:
- *        type: string
- *        description: A link to the user's resume.
- *        example: 'https://myresume.com/resume'
+ *      type: string
+ *      description: A link to the user's resume (either this or resumeFile is required).
+ *      example: 'https://myresume.com/resume'
  *     resumeFile:
- *           type: string
- *           description: The file user's uploaded resume.
- *           example: 'https://s3.amazonaws.com/bucket-name/resume.pdf'
+ *      type: string
+ *      description: The URL of the user's uploaded resume file (either this or resumeLink is required).
+ *      example: 'https://s3.amazonaws.com/bucket-name/resume.pdf'
  *     accounts:
  *      type: array
  *      items:
- *        type: object
- *        properties:
- *          domain:
- *           type: string
- *           description: The domain or platform of the account.
- *           example: 'LeetCode'
- *           maxLength: 50
- *          url:
- *           type: string
- *           description: The URL of the user's account on the specified domain.
- *           example: 'https://leetcode.com/username'
+ *       type: object
+ *       properties:
+ *        domain:
+ *         type: string
+ *         description: The domain or platform of the account.
+ *         example: 'LeetCode'
+ *         maxLength: 50
+ *        url:
+ *         type: string
+ *         description: The URL of the user's account on the specified domain.
+ *         example: 'https://leetcode.com/username'
+ *     professionalExperience:
+ *      type: number
+ *      description: The number of years of professional experience the user has.
+ *      example: 3
+ *      minimum: 0
+ *      maximum: 60
  *     passedOutYear:
  *      type: integer
- *      description: The year the user passed out from their educational institution.
+ *      description: The year the user graduated from their educational institution.
  *      example: 2020
  *      minimum: 1960
  *      maximum: 2040
@@ -90,7 +79,7 @@ const mongoose = require('mongoose')
  *      description: The timestamp when the user profile was last updated.
  *      example: '2025-01-01T12:00:00Z'
  *    additionalProperties: false
- *    timestamp: true 
+ *    timestamps: true 
  */
 
 const userProfileSchema = new mongoose.Schema(
@@ -100,38 +89,23 @@ const userProfileSchema = new mongoose.Schema(
             ref: 'users',
             required: [true, 'Author is a mandatory field'],
         },
+        professionalTitle: {
+            type: String, 
+            required: [true, 'Professional Title is a mandatory field']
+        },
         bio: {
             type: String,
             trim: true,
-            maxlength: [300, 'Bio must not exceed 300 characters'],
+            required: [true, 'Bio is a mandatory field'],
+            maxlength: [200, 'Bio must not exceed 200 characters'],
         },
         profilePicture: {
-            originalname: {
-                type: String,
-                trim: true,
-            },
-            size: {
-                type: Number,
-            },
-            mimetype: {
-                type: String,
-                match: [
-                    /^image\/(jpeg|png|webp|svg\+xml)$/,
-                    'Invalid MIME type. Allowed types are: jpeg, png, webp, svg+xml'
-                ],
-            },
-            s3Key: {
-                type: String,
-                trim: true,
-            },
-            externalLink: {
-                type: String,
-                trim: true,
-                match: [
-                    /^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/,
-                    'External link must be a valid URL'
-                ]
-            }
+            type: String,
+            trim: true,
+            match: [
+                /^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/,
+                'External link must be a valid URL'
+            ]
         },
         portfolioLink: {
             type: String,
@@ -166,8 +140,15 @@ const userProfileSchema = new mongoose.Schema(
                 },
             },
         ],
+        professionalExperience: {
+            type: Number,
+            required: [true, 'Professional Experience is a mandatory field'],
+            min: [0, 'Professional Experience cannot be negative'],
+            max: [60, 'Professional Experience exceeds the realistic limit']
+        },
         passedOutYear: {
             type: Number,
+            required: [true, 'Passed Out Year is a mandatory field'],
             min: [1960, 'Year must be a four-digit positive number'],
             max: [2040, 'Year must be a four-digit positive number'],
             validate: {
@@ -185,12 +166,3 @@ const userProfileSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model('userProfiles', userProfileSchema)
-
-
-/**
- * professional title 
- * bio - 200 character
- * professional experience 0-100
- * 
- * 
- */
