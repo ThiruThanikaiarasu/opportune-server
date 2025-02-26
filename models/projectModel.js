@@ -14,6 +14,8 @@ const mongoose = require('mongoose')
  *      - thumbnail
  *      - tags
  *      - githubLink
+ *      - problemStatement
+ *      - problemSolution
  *     properties: 
  *      author:
  *       type: string
@@ -37,7 +39,15 @@ const mongoose = require('mongoose')
  *       description: A brief description of the project.
  *       example: 'This project is about building a web app using the MERN stack.'
  *       minLength: 10
- *       maxLength: 500
+ *       maxLength: 100
+ *      problemStatement:
+ *       type: string
+ *       description: A brief description of the problem the project aims to solve.
+ *       example: 'Users struggle to find an intuitive platform for managing their daily tasks efficiently.'
+ *      problemSolution:
+ *       type: string
+ *       description: A brief description of how the project addresses the problem.
+ *       example: 'This project provides a user-friendly task management web app with real-time collaboration features.'
  *      thumbnail:
  *       type: object
  *       required: 
@@ -134,7 +144,15 @@ const projectSchema = new mongoose.Schema(
             type: String,
             required: [true, 'Description is a mandatory field'],
             minlength: [10, 'Description must be at least 10 characters long'],
-            maxlength: [500, 'Description must not exceed 500 characters'],
+            maxlength: [100, 'Description must not exceed 100 characters'],
+        },
+        problemStatement: {
+            type: String,
+            required: [true, 'Problem statement is a mandatory field'],
+        },
+        problemSolution: {
+            type: String,
+            required: [true, 'Problem Solution is a mandatory field'],
         },
         thumbnail: {
             originalname: {
@@ -201,3 +219,10 @@ const projectSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model('projects', projectSchema)
+
+
+/**
+ * description - 100 char
+ * problem statement - no char limit
+ * solution - no char limit
+ */

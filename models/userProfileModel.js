@@ -185,3 +185,12 @@ const userProfileSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model('userProfiles', userProfileSchema)
+
+
+/**
+ * professional title 
+ * bio - 200 character
+ * professional experience 0-100
+ * 
+ * 
+ */
