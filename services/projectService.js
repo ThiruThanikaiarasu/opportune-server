@@ -512,6 +512,12 @@ const deleteVote = (projectSlug, userId, session) => {
     return upvoteModel.findOneAndDelete({ upvoteFor: projectSlug, upvoteBy: userId }).session(session)
 }
 
+const incrementProjectViewCount = async (project) => {
+    project.viewsCount += 1
+    await project.save()
+    return project.viewsCount
+}
+
 
 module.exports = {
     doesAuthorHaveProjectWithTitle,
@@ -523,8 +529,10 @@ module.exports = {
     searchTagsByKeyword,
     findProjectByAuthorAndSlug,
     getPopularProjectsByAuthor,
+    findProjectBySlug,
     createVote,
     updateProjectVoteCount,
     findVote,
-    deleteVote
+    deleteVote,
+    incrementProjectViewCount
 }

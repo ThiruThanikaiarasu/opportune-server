@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser, optionalVerify } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -371,5 +371,31 @@ router.post('/:projectSlug/upvote', verifyUser, handleUpvote)
  */
 
 router.delete('/:projectSlug/upvote', verifyUser, handleRemoveUpvote)
+
+/**
+ * @swagger
+ * /project/{projectSlug}/view:
+ *  post:
+ *   tags:
+ *    - Project
+ *   summary: Update project view count
+ *   parameters:
+ *    - name: projectSlug
+ *      in: path
+ *      description: The slug of the project to update the view count for.
+ *      required: true
+ *      schema:
+ *       type: string
+ *       example: opportune
+ *   responses:
+ *    200:
+ *     description: Successfully updated the project view count
+ *    400:
+ *     description: Project not found
+ *    500:
+ *     description: Internal server error
+ */
+
+router.post('/:projectSlug/view', updateProjectView)
 
 module.exports = router

@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 const { default: mongoose } = require('mongoose')
@@ -215,6 +215,25 @@ const handleRemoveUpvote = async (request, response) => {
     }
 }
 
+const updateProjectView = async (request, response) => {
+    const { projectSlug } = request.params
+
+    try {
+        const project = await findProjectBySlug(projectSlug) 
+
+        if(!project) {
+            return response.status(400).send(setResponseBody("Project not found", "not_found", null))
+        }
+
+        const viewsCount = await incrementProjectViewCount(project)
+        
+        response.status(200).send(setResponseBody('View count updated', null, viewsCount))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     addANewProject,
     homeFeed,
@@ -225,5 +244,6 @@ module.exports = {
     getProjectByUsernameAndSlug,
     getMoreProjects,
     handleUpvote,
-    handleRemoveUpvote
+    handleRemoveUpvote,
+    updateProjectView
 }
