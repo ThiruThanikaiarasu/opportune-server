@@ -52,6 +52,39 @@ const updateUser = async (user, updates) => {
     return user; 
 };
 
+const fetchUserProfileData = (userId) => {
+    const userProfile = userProfileModel.aggregate(
+        [
+            {
+                $match: { author: userId }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorDetails'
+                }
+            },
+            {
+                $unwind: '$authorDetails'
+            },
+            {
+                $project: {
+                    _id: 0, 
+                    __v: 0, 
+                    author: 0,
+                    'authorDetails.password': 0, 
+                    'authorDetails._id': 0, 
+                    'authorDetails.__v': 0, 
+                    'authorDetails.createdAt': 0, 
+                    'authorDetails.updatedAt': 0, 
+                }
+            }
+        ]
+    )
+    return userProfile
+}
 
 const updateUserProfileData = async ({_id, email}, profileData, profilePicture) => {
     let userProfile = await userProfileModel.findOne({ author: _id })
@@ -91,5 +124,6 @@ module.exports = {
     createUser,
     findUserNameAlreadyExists,
     updateUser,
+    fetchUserProfileData,
     updateUserProfileData
 }

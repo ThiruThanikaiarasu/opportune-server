@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { checkUsernameAvailability, updateUserProfile, resetPassword } = require('../controllers/userController')
+const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile } = require('../controllers/userController')
 const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../validators/userValidator')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
@@ -76,6 +76,27 @@ router.post('/checkUsername', validateCheckUsernameInput(), checkUsernameAvailab
  */
 
 router.post('/resetPassword', validateResetPasswordInputs(), resetPassword)
+
+/**
+ * @swagger
+ * /profile:
+ *   get:
+ *     summary: Retrieve the authenticated user's profile
+ *     description: Fetches the profile details of the currently logged-in user.
+ *     tags:
+ *       - User Profile
+ *     security:
+ *       - BearerAuth: []
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved home feed projects
+ *    401:
+ *     description: Unauthorized, invalid or missing token
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/profile', verifyUser, getUserProfile)
 
 /**
  * @swagger
