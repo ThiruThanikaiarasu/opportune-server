@@ -87,18 +87,14 @@ const updateProjectData = async (project, newProjectData, thumbnail) => {
 
 const getHomeFeedProjects = async (limit, page, userId = null) => { 
     const skip = (page - 1) * limit 
-    const s3BaseUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/`
     
     const pipeline = [ 
         { 
             $addFields: { 
                 thumbnailUrl: { 
                     $cond: { 
-                        if: { $ifNull: ["$thumbnail.s3Key", false] },  
-                        then: { $concat: [ 
-                            s3BaseUrl, 
-                            "$thumbnail.s3Key"  
-                        ] }, 
+                        if: { $ifNull: ["$thumbnail.s3Url", false] },  
+                        then: "$thumbnail.s3Url",  
                         else: null  
                     } 
                 },
@@ -171,8 +167,8 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
             $addFields: {
                 'authorDetails.profilePicture': { 
                     $cond: { 
-                        if: { $ifNull: ['$authorProfile.profilePicture.s3Key', false] }, 
-                        then: { $concat: [s3BaseUrl, '$authorProfile.profilePicture.s3Key'] }, 
+                        if: { $ifNull: ['$authorProfile.profilePicture', false] }, 
+                        then: '$authorProfile.profilePicture', 
                         else: null 
                     } 
                 }
