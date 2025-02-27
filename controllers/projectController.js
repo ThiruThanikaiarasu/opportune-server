@@ -94,7 +94,8 @@ const searchProjects = async (request, response) => {
             return response.status(400).send(setResponseBody("Keyword is required", "keyword_missing", null))
         }
 
-        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt)
+        const userId = request.isAuthenticated ? request.user._id : null
+        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt, userId)
 
         response.status(200).send(setResponseBody("Projects that matches the keyword", null, projects))
 
@@ -110,7 +111,8 @@ const filterProjects = async (request, response) => {
     const pageInt = parseInt(page, 10)
 
     try{
-        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt)
+        const userId = request.isAuthenticated ? request.user._id : null
+        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt, userId)
 
         response.status(200).send(setResponseBody("Filtered projects", null, projects))
     }

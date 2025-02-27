@@ -143,7 +143,7 @@ router.get('/home', optionalVerify, homeFeed)
  *      description: Internal server error
  */
 
-router.get('/search', searchProjects)
+router.get('/search', optionalVerify, searchProjects)
 
 
 /**
@@ -198,7 +198,7 @@ router.get('/search', searchProjects)
  *      description: Internal server error
  */
 
-router.get('/filter', filterProjects)
+router.get('/filter', optionalVerify, filterProjects)
 
 
 /**
