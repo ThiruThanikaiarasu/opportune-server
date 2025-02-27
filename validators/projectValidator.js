@@ -12,10 +12,16 @@ const validateProjectInputValues = [
     body('description')
         .notEmpty()
         .withMessage('Description is a required field')
-        .isLength({ min: 10, max: 500 })
-        .withMessage('Description must be between 10 and 500 characters'),
+        .isLength({ min: 10, max: 100 })
+        .withMessage('Description must be between 10 and 100 characters'),
+    
+    body('problemStatement')
+        .notEmpty().withMessage('Problem statement is a required field'),
 
-        body('tags')
+    body('problemSolution')
+        .notEmpty().withMessage('Problem solution is a required field'),
+
+    body('tags')
         .isArray({ min: 1, max: 3 }).withMessage('Tags must be an array with at least one and at most three items')
         .custom((tags) => tags.every(tag => typeof tag === 'string'))
         .withMessage('Each tag must be a string'),

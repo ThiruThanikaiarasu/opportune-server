@@ -219,10 +219,3 @@ const projectSchema = new mongoose.Schema(
 )
 
 module.exports = mongoose.model('projects', projectSchema)
-
-
-/**
- * description - 100 char
- * problem statement - no char limit
- * solution - no char limit
- */

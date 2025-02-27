@@ -1,3 +1,4 @@
+const { S3_BASE_URL } = require('../configurations/constants')
 const UploadError = require('../errors/UploadError')
 const projectModel = require('../models/projectModel')
 const projectTagModel = require('../models/projectTagModel')
@@ -17,9 +18,10 @@ const createSlug = (title) => {
         .replace(/\s+/g, '-')
 }
 
-const createNewProject = async (author, title, description, tags, githubLink, hostedLink, documentation, thumbnail) => {
+const createNewProject = async (author, title, description, problemStatement, problemSolution, tags, githubLink, hostedLink, documentation, thumbnail) => {
     try {
         const thumbnailS3Key = await uploadToS3(thumbnail)
+        const thumbnailURL = S3_BASE_URL + thumbnailS3Key
 
         const slug = createSlug(title)
         
@@ -27,14 +29,16 @@ const createNewProject = async (author, title, description, tags, githubLink, ho
             author,
             title,
             slug,
-            description,
+            description, 
+            problemStatement, 
+            problemSolution,
             tags,
             githubLink,
             thumbnail: {
                 originalname: thumbnail.originalname,
                 size: thumbnail.size,
                 mimetype: thumbnail.mimetype,
-                s3Key: thumbnailS3Key
+                s3Key: thumbnailURL
             },
             hostedLink: hostedLink || null, 
             documentation: documentation || null

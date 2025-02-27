@@ -8,7 +8,7 @@ const { default: mongoose } = require('mongoose')
 
 const addANewProject = async (request, response) => {
     const user = request.user._id
-    const { title, description, tags, githubLink, hostedLink, documentation } = request.body
+    const { title, description, problemStatement, problemSolution, tags, githubLink, hostedLink, documentation } = request.body
     const thumbnail = request.file
     
     try {
@@ -25,12 +25,12 @@ const addANewProject = async (request, response) => {
             return response.status(409).send(setResponseBody("Title already exists. Please choose a different title.", "existing_project_title", null))
         }
 
-        const newProject = await createNewProject(user, title, description, tags, githubLink, hostedLink, documentation, thumbnail) 
+        const newProject = await createNewProject(user, title, description, problemStatement, problemSolution, tags, githubLink, hostedLink, documentation, thumbnail) 
 
         response.status(201).send(setResponseBody("Project created Successfully", null, newProject))
     }
     catch(error) {
-
+        console.log(error)
         if(error instanceof UploadError) {
             return response.status(error.statusCode).send(setResponseBody(error.message, "service_unavailable", null))
         }
