@@ -106,7 +106,8 @@ const updateUserProfileData = async ({_id, email}, profileData, profilePicture) 
 
     if(profilePicture) {
         if(userProfile.profilePicture) {
-            await deleteFromS3(userProfile.profilePicture)
+            const s3Key = userProfile.profilePicture.replace(S3_BASE_URL, '')
+            await deleteFromS3(s3Key)
         }
 
         const thumbnailS3Key = await uploadToS3(profilePicture)
