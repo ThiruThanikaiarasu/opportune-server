@@ -54,7 +54,7 @@ const mongoose = require('mongoose')
  *        - originalname
  *        - size
  *        - mimetype
- *        - s3Key
+ *        - s3Url
  *       properties:
  *        originalname: 
  *         type: string
@@ -68,7 +68,7 @@ const mongoose = require('mongoose')
  *         type: string
  *         description: Mimetype of the uploaded file.
  *         example: image/png
- *        s3Key: 
+ *        s3Url: 
  *         type: string
  *         description: The URL of the project's thumbnail image stored in AWS S3 after the file upload.
  *         example: 'https://s3.amazonaws.com/bucket-name/thumbnail.jpg'
@@ -172,7 +172,7 @@ const projectSchema = new mongoose.Schema(
                     'Invalid MIME type. Allowed types are: jpeg, png, gif, webp, svg+xml'
                 ],
             },
-            s3Key: {
+            s3Url: {
                 type: String,
                 required: [true, 'Thumbnail S3Key is a mandatory field'],
                 trim: true,

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView, editProject } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser, optionalVerify } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -67,6 +67,12 @@ const { validateProjectInputValues } = require('../validators/projectValidator')
 */
 
 router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
+
+/**
+ * 
+ */
+
+router.patch('/:projectSlug', verifyUser, upload.single('thumbnail'), editProject)
 
 /**
  * @swagger

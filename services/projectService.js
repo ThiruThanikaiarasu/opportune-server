@@ -3,7 +3,7 @@ const UploadError = require('../errors/UploadError')
 const projectModel = require('../models/projectModel')
 const projectTagModel = require('../models/projectTagModel')
 const upvoteModel = require('../models/upvoteModel')
-const { uploadToS3 } = require('./s3Service')
+const { uploadToS3, deleteFromS3 } = require('./s3Service')
 
 
 const doesAuthorHaveProjectWithTitle = async (author, title) => {
@@ -38,7 +38,7 @@ const createNewProject = async (author, title, description, problemStatement, pr
                 originalname: thumbnail.originalname,
                 size: thumbnail.size,
                 mimetype: thumbnail.mimetype,
-                s3Key: thumbnailURL
+                s3Url: thumbnailURL
             },
             hostedLink: hostedLink || null, 
             documentation: documentation || null
@@ -57,6 +57,32 @@ const createNewProject = async (author, title, description, problemStatement, pr
 
         throw error
     }
+}
+
+const updateProjectData = async (project, newProjectData, thumbnail) => {
+    Object.keys(newProjectData).forEach(key => {
+        if (newProjectData[key] !== undefined) {
+            project[key] = newProjectData[key]
+        }
+    })
+
+    if (thumbnail) {
+        if (project.thumbnail && project.thumbnail.s3Url) {
+            const s3Key = project.thumbnail.s3Url.replace(S3_BASE_URL, '')
+            await deleteFromS3(s3Key)
+        }
+
+        const thumbnailS3Key = await uploadToS3(thumbnail)
+
+        project.thumbnail.originalname = thumbnail.originalname
+        project.thumbnail.size = thumbnail.size
+        project.thumbnail.mimetype = thumbnail.mimetype
+        project.thumbnail.s3Url = S3_BASE_URL + thumbnailS3Key
+    }
+
+    await project.save()
+    
+    return project
 }
 
 const getHomeFeedProjects = async (limit, page, userId = null) => { 
@@ -526,6 +552,7 @@ const incrementProjectViewCount = async (project) => {
 module.exports = {
     doesAuthorHaveProjectWithTitle,
     createNewProject,
+    updateProjectData,
     getHomeFeedProjects,
     searchProjectByKeyword,
     getFilteredProjects,
