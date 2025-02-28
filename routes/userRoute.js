@@ -101,6 +101,27 @@ router.get('/profile', verifyUser, getUserProfile)
 /**
  * @swagger
  * /user/profile:
+ *   get:
+ *     summary: Retrieve the authenticated user's profile
+ *     description: Fetches the profile details of the currently logged-in user.
+ *     tags:
+ *       - User Profile
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user profile
+ *       401:
+ *         description: Unauthorized, invalid or missing token
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/profile', verifyUser, getUserProfile)
+
+/**
+ * @swagger
+ * /user/profile:
  *  patch:
  *   tags:
  *    - User Profile

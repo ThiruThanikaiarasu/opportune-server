@@ -1,14 +1,15 @@
 const { validationResult } = require('express-validator')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 const { default: mongoose } = require('mongoose')
+const { request } = require('express')
 
 
 const addANewProject = async (request, response) => {
     const user = request.user._id
-    const { title, description, tags, githubLink, hostedLink, documentation } = request.body
+    const { title, description, problemStatement, problemSolution, tags, githubLink, hostedLink, documentation } = request.body
     const thumbnail = request.file
     
     try {
@@ -25,15 +26,41 @@ const addANewProject = async (request, response) => {
             return response.status(409).send(setResponseBody("Title already exists. Please choose a different title.", "existing_project_title", null))
         }
 
-        const newProject = await createNewProject(user, title, description, tags, githubLink, hostedLink, documentation, thumbnail) 
+        const newProject = await createNewProject(user, title, description, problemStatement, problemSolution, tags, githubLink, hostedLink, documentation, thumbnail) 
 
         response.status(201).send(setResponseBody("Project created Successfully", null, newProject))
     }
     catch(error) {
-
+        console.log(error)
         if(error instanceof UploadError) {
             return response.status(error.statusCode).send(setResponseBody(error.message, "service_unavailable", null))
         }
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const editProject = async (request, response) => {
+    const userId = request.user._id
+    const { projectSlug } = request.params
+    const newProjectData = request.body 
+    const thumbnail = request.file || null
+
+    try {
+        const project = await findProjectBySlug(projectSlug)
+
+        if(!project) {
+            return response.status(404).send(setResponseBody("Project not found", "not_found", null))
+        }
+
+        if (project.author.toString() !== userId.toString()) {
+            return response.status(403).send(setResponseBody("Unauthorized access", "unauthorized", null))
+        }
+        
+        const updatedProject = await updateProjectData(project, newProjectData, thumbnail)
+
+        response.status(200).send(setResponseBody("Project updated successfully", null, updatedProject))
+    }
+    catch(error) {
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
 }
@@ -67,7 +94,8 @@ const searchProjects = async (request, response) => {
             return response.status(400).send(setResponseBody("Keyword is required", "keyword_missing", null))
         }
 
-        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt)
+        const userId = request.isAuthenticated ? request.user._id : null
+        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt, userId)
 
         response.status(200).send(setResponseBody("Projects that matches the keyword", null, projects))
 
@@ -83,7 +111,8 @@ const filterProjects = async (request, response) => {
     const pageInt = parseInt(page, 10)
 
     try{
-        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt)
+        const userId = request.isAuthenticated ? request.user._id : null
+        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt, userId)
 
         response.status(200).send(setResponseBody("Filtered projects", null, projects))
     }
@@ -236,6 +265,7 @@ const updateProjectView = async (request, response) => {
 
 module.exports = {
     addANewProject,
+    editProject,
     homeFeed,
     searchProjects,
     filterProjects,
