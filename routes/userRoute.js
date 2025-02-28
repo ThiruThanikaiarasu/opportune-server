@@ -87,13 +87,13 @@ router.post('/resetPassword', validateResetPasswordInputs(), resetPassword)
  *       - User Profile
  *     security:
  *       - BearerAuth: []
- *   responses:
- *    200:
- *      description: Successfully retrieved home feed projects
- *    401:
- *     description: Unauthorized, invalid or missing token
- *    500:
- *      description: Internal server error
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user profile
+ *       401:
+ *         description: Unauthorized, invalid or missing token
+ *       500:
+ *         description: Internal server error
  */
 
 router.get('/profile', verifyUser, getUserProfile)
