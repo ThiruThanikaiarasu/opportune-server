@@ -90,9 +90,30 @@ const updateUserProfile = async (request, response) => {
     }
 }
 
+const getUserInfo = async(request,response) => {
+    const { _id, email } = request.user
+    try {
+        const userData = await findUserByEmail(email)
+        const userProfile = await fetchUserProfileData(_id)
+
+        const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
+        const responseData = {
+            profilePicture : profilePicture,
+            username : userData.username,
+            email : userData.email,
+        }
+
+        response.status(200).send(setResponseBody("User data fetched", null, responseData))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     checkUsernameAvailability,
     resetPassword,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    getUserInfo
 }

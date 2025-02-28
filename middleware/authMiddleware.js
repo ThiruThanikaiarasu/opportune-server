@@ -104,7 +104,7 @@ const verifyUser = async (request, response, next) => {
                         return response.status(401).send(setResponseBody("Unauthorized User", "authentication_error", null));
                     }
         
-                    let newAccessToken = await verifyGoogleAccessToken(accessToken+"ABC", existingOauthUser.refreshToken, _id, response, request);
+                    let newAccessToken = await verifyGoogleAccessToken(accessToken, existingOauthUser.refreshToken, _id, response, request);
 
                     if (!newAccessToken || !request.user) {
                         return;  

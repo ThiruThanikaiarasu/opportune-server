@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile } = require('../controllers/userController')
+const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile, getUserInfo } = require('../controllers/userController')
 const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../validators/userValidator')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
@@ -187,5 +187,43 @@ router.get('/profile', verifyUser, getUserProfile)
  */
 
 router.patch('/profile', upload.single('profilePicture'), verifyUser, updateUserProfile)
+
+/**
+ * @swagger
+ * /user/info:
+ *   get:
+ *     tags:
+ *       - User
+ *     summary: Get user information
+ *     description: Retrieves user details after verifying authentication.
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved user information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profilePicture:
+ *                   type: string
+ *                   format: uri
+ *                   description: URL of the user's profile picture
+ *                   example: "https://app.s3.ap-south-1.amazonaws.com/sdfgdbvdssdvggegfxcfgdgd"
+ *                 username:
+ *                   type: string
+ *                   description: The username of the user
+ *                   example: "jon"
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                   description: The email address of the user
+ *                   example: "jon@gmail.com"
+ *       401:
+ *         description: Unauthorized, user must be logged in
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/info',verifyUser, getUserInfo)
 
 module.exports = router
