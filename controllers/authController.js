@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt')
 
 const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/authService')
-const { findUserByEmail, createUser } = require('../services/userService')
+const { findUserByEmail, createUser, fetchUserProfileData } = require('../services/userService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
 const { generateToken, setTokenCookie, clearTokenCookie } = require('../utils/tokenServices')
@@ -153,7 +153,11 @@ const verifyOtp = async(request,response) => {
         const token = generateToken(userData)
         setTokenCookie(response, 'SessionID', token)
         
+        const userProfile = await fetchUserProfileData(userData._id)
+        const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
+
         let responseData = {
+            profilePicture : profilePicture,
             name : userData.name,
             username : userData.username, 
             email: userData.email
@@ -194,8 +198,12 @@ const login = async(request, response) => {
 
         const token = generateToken(existingUser)
         setTokenCookie(response, 'SessionID', token)
-
+        
+        const userProfile = await fetchUserProfileData(existingUser._id)
+        const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
+        
         let responseData = {
+            profilePicture : profilePicture,
             name : existingUser.name,
             username : existingUser.username, 
             email: existingUser.email
