@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { authenticateWithGoogle } = require('../middleware/oauthMiddleware')
+const { authenticateWithGoogle, reauthenticateWithGoogle} = require('../middleware/oauthMiddleware')
 const { googleAuthCallback } = require('../controllers/googleAuthController')
 
 /**
@@ -45,5 +45,24 @@ router.get('/login',authenticateWithGoogle)
  */
 
 router.get('/callback',authenticateWithGoogle,googleAuthCallback)
+
+/**
+ * @swagger
+ * /auth/google/reauth:
+ *   get:
+ *     tags:
+ *       - "OAuth Authentication"
+ *     summary: "Reauthenticate with Google"
+ *     description: "Reauthenticates the user with Google and refreshes the authentication session."
+ *     responses:
+ *       200:
+ *         description: "Successfully reauthenticated"
+ *       401:
+ *         description: "Unauthorized, authentication required"
+ *       500:
+ *         description: "Internal server error"
+ */
+
+router.get('/reauth', reauthenticateWithGoogle)
 
 module.exports = router

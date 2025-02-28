@@ -4,6 +4,7 @@ const { createUser, findUserByEmail, updateUser } = require('../services/userSer
 const { setTokenCookie } = require('../utils/tokenServices')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { generateUsername } = require('../utils/usernameGenerator')
+const { findOAuthTokenById, updateOAuthToken } = require('../services/oauthTokenService')
 
 const handleGitHubCallback = async (request, response) => {
     const { profile, accessToken } = request.user;
@@ -13,8 +14,7 @@ const handleGitHubCallback = async (request, response) => {
 
         const userData = {
             name: profile._json.name || profile._json.login,  
-            email: primaryEmail,
-            githubId: profile._json.id
+            email: primaryEmail
         }
 
         const existingUser = await findUserByEmail(primaryEmail)
@@ -26,12 +26,19 @@ const handleGitHubCallback = async (request, response) => {
             newUser = await createUser(userData)
         }
 
-        if(!existingUser.githubId)
+        newUser = newUser || existingUser
+        const existingOauthUser = await findOAuthTokenById( newUser._id , "github")
+
+        if(!existingOauthUser || !existingOauthUser.refreshToken)
         {
-            await updateUser(existingUser, { githubId : userData.githubId })
+            await updateOAuthToken({
+            _id: newUser._id,
+            provider: "github",
+            providerId: profile._json.id,
+            refreshToken: null
+            })
         }
         
-        newUser = newUser || existingUser
         const token = jwt.sign({ _id: newUser._id , accessToken: accessToken },process.env.ACCESS_TOKEN,{ expiresIn: '30d' })
         setTokenCookie(response,'githubAuthToken', token)
 

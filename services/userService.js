@@ -13,20 +13,15 @@ const createUser = async ({
     name, 
     username, 
     email, 
-    password = null, 
-    githubId = null, 
-    googleId = null 
+    password = null
 }) => {
 
     const user = new userModel({
         name,
         username,
         email,
-        password,
-        githubId,
-        googleId
-    });
-
+        password
+    })
     await user.save();
 
     return user;
@@ -46,7 +41,7 @@ const updateUser = async (user, updates) => {
 
     const { password, ...otherUpdates } = updates;
 
-    Object.assign(user, otherUpdates);
+    Object.assign(user, updates );
 
     await user.save(); 
     return user; 

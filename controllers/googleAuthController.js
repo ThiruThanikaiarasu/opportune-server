@@ -4,13 +4,13 @@ const { findUserByEmail, createUser, updateUser } = require('../services/userSer
 const { setTokenCookie } = require('../utils/tokenServices')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { generateUsername } = require('../utils/usernameGenerator')
+const { findOAuthTokenById, updateOAuthToken } = require('../services/oauthTokenService')
 
 const googleAuthCallback = async (request, response) => {
     try {
-      const { profile, accessToken } = request.user;
+      const { profile, accessToken, refreshToken } = request.user;
   
       const userData = {
-        googleId: profile.id,
         name: profile.displayName,
         email: profile.emails[0].value,
       };
@@ -23,12 +23,19 @@ const googleAuthCallback = async (request, response) => {
         newUser = await createUser(userData)
       }
 
-      if(!existingUser.googleId)
+      newUser = newUser || existingUser
+      const existingOauthUser = await findOAuthTokenById( newUser._id , "google")
+
+      if(!existingOauthUser || !existingOauthUser.refreshToken)
       {
-          await updateUser(existingUser, { googleId : userData.googleId })
+        await updateOAuthToken({
+          _id: newUser._id,
+          provider: "google",
+          providerId: profile.id,
+          refreshToken: refreshToken
+        })
       }
 
-      newUser = newUser || existingUser
       const token = jwt.sign({ _id: newUser._id , accessToken: accessToken },process.env.ACCESS_TOKEN,{ expiresIn: '30d' })
       setTokenCookie(response,'googleAuthToken', token)
 

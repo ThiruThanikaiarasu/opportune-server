@@ -24,10 +24,12 @@ passport.use(
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_OAUTH_CALLBACK_URL,
-      scope: ['profile', 'email']
+      scope: ['profile', 'email'],
+      accessType: "offline",
+      prompt: "consent"
     },
     (accessToken, refreshToken, profile, done) => {
-      return done(null, { profile, accessToken });
+      return done(null, { profile, accessToken, refreshToken });
     }
   )
 )

@@ -4,7 +4,8 @@ const axios = require('axios')
 const { setResponseBody } = require('../utils/responseFormatter')
 const userModel = require('../models/userModel')
 const { findUserById } = require('../services/authService')
-
+const { refreshAccessToken, verifyGoogleAccessToken } = require('../utils/googleTokenServices')
+const { findOAuthTokenById } = require('../services/oauthTokenService')
 
 const parseCookies = (cookieString) => {
 
@@ -69,7 +70,6 @@ const verifyUser = async (request, response, next) => {
                             Authorization: `Bearer ${accessToken}`  
                         }
                     });
-
                     if (githubResponse.status === 200) {
                         const githubUser = githubResponse.data;
                         request.user = {
@@ -89,40 +89,38 @@ const verifyUser = async (request, response, next) => {
                 }
             });
         }
-        else if(googleAuthToken) {
-
+        else if (googleAuthToken) {
             jwt.verify(googleAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
                 if (error) {
                     return response.status(401).send(setResponseBody("Google token expired or invalid", "authentication_error", null));
                 }
-
-                const { _id, accessToken } = decoded;  
+        
+                const { _id, accessToken } = decoded;
                 try {
-                    const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`  
-                        }
-                    });
-
-                    if (googleResponse.status === 200) {
-                        const googleUser = googleResponse.data;
-                        request.user = {
-                            _id: _id,
-                            githubId: googleUser.id,
-                            username: googleUser.login,
-                            email: googleUser.email
-                        };
-
-                        request.isAuthenticated = true
-                        return next();  
-                    } else {
-                        return response.status(401).send(setResponseBody("Google authentication failed", "authentication_error", null));
+                    const user = await findUserById(_id);
+                    const existingOauthUser = await findOAuthTokenById(_id, "google");
+        
+                    if (!user || !existingOauthUser) {
+                        return response.status(401).send(setResponseBody("Unauthorized User", "authentication_error", null));
                     }
+        
+                    let newAccessToken = await verifyGoogleAccessToken(accessToken+"ABC", existingOauthUser.refreshToken, _id, response, request);
+
+                    if (!newAccessToken || !request.user) {
+                        return;  
+                    }
+        
+                    request.isAuthenticated = true;
+                    return next();
                 } catch (error) {
-                    return response.status(401).send(setResponseBody("Google authentication error", "authentication_error", null));
+                    console.error("Google authentication error:", error);
+                    
+                    if (!response.headersSent) {
+                        return response.status(500).send(setResponseBody("Internal server error", "server_error", null));
+                    }
                 }
             });
-        } 
+        }        
         else {
             return response.status(401).send(setResponseBody("No valid authentication token found", "authentication_error", null));
         }
