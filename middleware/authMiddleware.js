@@ -58,39 +58,48 @@ const verifyUser = async (request, response, next) => {
         }
         else if (githubAuthToken) {
             
-            jwt.verify(githubAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
+            return jwt.verify(githubAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
                 if (error) {
                     return response.status(401).send(setResponseBody("GitHub token expired or invalid", "authentication_error", null));
                 }
 
                 const { _id, accessToken } = decoded;  
                 try {
+                    
+                    const user = await findUserById(_id);
+        
+                    if (!user) {
+                        return response.status(401).send(setResponseBody("Unauthorized User", "authentication_error", null));
+                    }
+
                     const githubResponse = await axios.get('https://api.github.com/user', {
                         headers: {
                             Authorization: `Bearer ${accessToken}`  
                         }
                     });
-                    if (githubResponse.status === 200) {
-                        const githubUser = githubResponse.data;
-                        request.user = {
-                            _id: _id,
-                            githubId: githubUser.id,
-                            username: githubUser.login,
-                            email: githubUser.email
-                        };
+                    const githubUser = githubResponse.data;
+                    request.user = {
+                        _id: _id,
+                        githubId: githubUser.id,
+                        username: githubUser.login,
+                        email: user.email
+                    };
 
-                        request.isAuthenticated = true
-                        return next();  
-                    } else {
-                        return response.status(401).send(setResponseBody("GitHub authentication failed", "authentication_error", null));
-                    }
+                    request.isAuthenticated = true
+                    return next(); 
                 } catch (error) {
-                    return response.status(401).send(setResponseBody("GitHub authentication error", "authentication_error", null));
+                    if (error.response) {
+                        if (error.response.status === 401) { 
+                            return response.status(440).send(setResponseBody("Session expired, please log in again", "session_expired", null));
+                        }
+                        return response.status(error.response.status).send(setResponseBody(error.response.data.message || "GitHub authentication failed", "authentication_error", null));
+                    }
+                    return response.status(500).send(setResponseBody("GitHub authentication error", "authentication_error", null));
                 }
             });
         }
         else if (googleAuthToken) {
-            jwt.verify(googleAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
+            return jwt.verify(googleAuthToken, process.env.ACCESS_TOKEN, async (error, decoded) => {
                 if (error) {
                     return response.status(401).send(setResponseBody("Google token expired or invalid", "authentication_error", null));
                 }
@@ -128,9 +137,6 @@ const verifyUser = async (request, response, next) => {
         response.status(500).send(setResponseBody(error.message, "server_error", null));
     }
 };
-
-
-
 
 module.exports = {
     optionalVerify,
