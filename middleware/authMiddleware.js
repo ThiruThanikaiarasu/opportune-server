@@ -42,7 +42,7 @@ const verifyUser = async (request, response, next) => {
             
             jwt.verify(sessionId, process.env.ACCESS_TOKEN, async (error, decoded) => {
                 if (error) {
-                    return response.status(401).send(setResponseBody("Session Expired", "authentication_error", null));
+                    return response.status(440).send(setResponseBody("Session Expired", "authentication_error", null));
                 }
 
                 const { id } = decoded;

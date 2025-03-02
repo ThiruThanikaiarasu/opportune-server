@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData } = require('../services/userService')
 const { validationResult } = require('express-validator')

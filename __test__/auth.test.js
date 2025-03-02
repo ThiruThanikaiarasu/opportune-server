@@ -1,6 +1,6 @@
 const app = require('../app')
 const request = require('supertest')
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const { findAuthUserByEmail, createOtp, generateOtp } = require('../services/authService')
 const { findUserByEmail, createUser } = require('../services/userService')

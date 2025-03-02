@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 
 const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/authService')
 const { findUserByEmail, createUser, fetchUserProfileData } = require('../services/userService')
