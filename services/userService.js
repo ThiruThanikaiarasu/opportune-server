@@ -34,18 +34,19 @@ const findUserNameAlreadyExists = async (username) => {
 
 const updateUser = async (user, updates) => {
     if (updates.password) {
-        const salt = await bcrypt.genSalt(10); 
-        const hashedPassword = await bcrypt.hash(updates.password, salt); 
-        user.password = hashedPassword; 
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(updates.password, salt);
+        user.password = hashedPassword;
     }
 
     const { password, ...otherUpdates } = updates;
 
-    Object.assign(user, updates );
+    Object.assign(user, otherUpdates); 
 
-    await user.save(); 
-    return user; 
+    await user.save();
+    return user;
 };
+
 
 const fetchUserProfileData = (userId) => {
     const userProfile = userProfileModel.aggregate(
