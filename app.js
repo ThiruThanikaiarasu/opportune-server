@@ -15,6 +15,7 @@ const userRoute = require('./routes/userRoute')
 const githubAuthRoute = require('./routes/githubAuthRoute')
 const googleAuthRoute = require('./routes/googleAuthRoute')
 const { CSS_URL } = require('./configurations/constants')
+const rateLimiter = require('./middleware/rateLimiterMiddleware')
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN_URL, 
@@ -30,10 +31,10 @@ app.get('/', (request, response) => {
 })
 
 app.use('/api-doc', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {customCssUrl: CSS_URL}))
-app.use('/api/v1/auth',authRoute)
-app.use('/api/v1/project', projectRoute)
-app.use('/api/v1/user', userRoute)
-app.use('/api/v1/auth/github',githubAuthRoute);
-app.use('/api/v1/auth/google',googleAuthRoute);
+app.use('/api/v1/auth', rateLimiter.auth, authRoute)
+app.use('/api/v1/project', rateLimiter.contentBrowsing, projectRoute)
+app.use('/api/v1/user', rateLimiter.standard, userRoute)
+app.use('/api/v1/auth/github', rateLimiter.auth, githubAuthRoute)
+app.use('/api/v1/auth/google', rateLimiter.auth, googleAuthRoute)
 
 module.exports = app
