@@ -2,6 +2,7 @@ const { S3_BASE_URL } = require('../configurations/constants')
 const UploadError = require('../errors/UploadError')
 const projectModel = require('../models/projectModel')
 const projectTagModel = require('../models/projectTagModel')
+const skillsModel = require('../models/skillsModel')
 const upvoteModel = require('../models/upvoteModel')
 const { uploadToS3, deleteFromS3 } = require('./s3Service')
 
@@ -690,6 +691,34 @@ const incrementProjectViewCount = async (project) => {
     return project.viewsCount
 }
 
+const searchSkillsByKeyword = async (keyword) => {
+    if (!keyword.trim()) {
+        return fetchAllSkills()
+    }
+
+    const skills = await skillsModel.find(
+        {
+            $or: [
+                { name: { $regex: `^${keyword}`, $options: 'i' } }, 
+                { name: { $regex: keyword, $options: 'i' } } 
+            ]
+        }
+    )
+
+    
+    return skills.sort((a, b) => {
+        const startsWithA = a.name.toLowerCase().startsWith(keyword.toLowerCase())
+        const startsWithB = b.name.toLowerCase().startsWith(keyword.toLowerCase())
+
+        if (startsWithA && !startsWithB) return -1 
+        if (!startsWithA && startsWithB) return 1 
+        return a.name.localeCompare(b.name) 
+    })
+}
+
+const fetchAllSkills = () => {
+    return skillsModel.find().limit() 
+}
 
 module.exports = {
     doesAuthorHaveProjectWithTitle,
@@ -707,5 +736,6 @@ module.exports = {
     updateProjectVoteCount,
     findVote,
     deleteVote,
-    incrementProjectViewCount
+    incrementProjectViewCount,
+    searchSkillsByKeyword
 }

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView, editProject } = require('../controllers/projectController')
+const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView, editProject, searchSkills } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser, optionalVerify } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -403,5 +403,29 @@ router.delete('/:projectSlug/upvote', verifyUser, handleRemoveUpvote)
  */
 
 router.post('/:projectSlug/view', updateProjectView)
+
+/**
+ * @swagger
+ * /project/skills:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Search for skills by keyword
+ *   parameters:
+ *    - name: keyword
+ *      in: query
+ *      description: The keyword to search for in skills.
+ *      required: false
+ *      schema:
+ *       type: string
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved skills
+ *    500:
+ *      description: Internal server error
+ */
+
+
+router.get('/skills', searchSkills)
 
 module.exports = router
