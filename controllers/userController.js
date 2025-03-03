@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 
-const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData } = require('../services/userService')
+const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData, findPortfolioDetails, findUserByUsername } = require('../services/userService')
 const { validationResult } = require('express-validator')
 const { setResponseBody } = require('../utils/responseFormatter')
 
@@ -110,10 +110,29 @@ const getUserInfo = async(request,response) => {
     }
 }
 
+const getPortfolioByUsername = async (request, response) => {
+    const { username } = request.params
+    try {
+        const existingUser = await findUserByUsername(username)
+
+        if(!existingUser) {
+            return response.status(404).send(setResponseBody("Portfolio not found", "not_found", null))
+        }
+
+        const portfolio = await findPortfolioDetails(username)
+
+        response.status(200).send(setResponseBody("Portfolio fetched", null, portfolio))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     checkUsernameAvailability,
     resetPassword,
     getUserProfile,
     updateUserProfile,
-    getUserInfo
+    getUserInfo,
+    getPortfolioByUsername
 }

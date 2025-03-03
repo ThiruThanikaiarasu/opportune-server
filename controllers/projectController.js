@@ -4,7 +4,6 @@ const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 const { default: mongoose } = require('mongoose')
-const { request } = require('express')
 
 
 const addANewProject = async (request, response) => {
@@ -271,7 +270,7 @@ const searchSkills = async (request, response) => {
 
         response.status(200).send(setResponseBody("Skills fetched successfully", null, skills))
     }
-    catch (error) {
+    catch(error) {
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
 }

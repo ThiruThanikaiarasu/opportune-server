@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile, getUserInfo } = require('../controllers/userController')
+const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile, getUserInfo, getPortfolioByUsername } = require('../controllers/userController')
 const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../validators/userValidator')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
@@ -225,5 +225,31 @@ router.patch('/profile', upload.single('profilePicture'), verifyUser, updateUser
  */
 
 router.get('/info',verifyUser, getUserInfo)
+
+/**
+ * @swagger
+ * /user/portfolio/{username}:
+ *   get:
+ *     tags:
+ *       - User Profile
+ *     summary: Get portfolio details by username
+ *     description: Fetches the portfolio details of a user based on their username.
+ *     parameters:
+ *       - name: username
+ *         in: path
+ *         required: true
+ *         description: The username of the portfolio owner.
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved portfolio details
+ *       404:
+ *         description: Portfolio not found
+ *       500:
+ *         description: Internal server error
+ */
+
+router.get('/portfolio/:username', getPortfolioByUsername)
 
 module.exports = router

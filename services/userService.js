@@ -9,6 +9,10 @@ const findUserByEmail = (email) => {
     return userModel.findOne({ email }).select('+password')
 }
 
+const findUserByUsername = (username) => {
+    return userModel.findOne({ username })
+}
+
 const createUser = async ({ 
     name, 
     username, 
@@ -116,11 +120,77 @@ const updateUserProfileData = async ({_id, email}, profileData, profilePicture) 
     return userProfile
 }
 
+const findPortfolioDetails = async (username) => {
+    const pipeline = [
+        {
+            $match: { username: username }
+        },
+        {
+            $lookup: {
+                from: "userprofiles",
+                localField: "_id",
+                foreignField: "author",
+                as: "profileArray"
+            }
+        },
+        {
+            $lookup: {
+                from: "projects",
+                localField: "_id",
+                foreignField: "author",
+                as: "projects"
+            }
+        },
+        {
+            $addFields: {
+                profileData: { $arrayElemAt: ["$profileArray", 0] }
+            }
+        },
+        {
+            $addFields: {
+                bio: "$profileData.bio",
+                portfolioLink: "$profileData.portfolioLink",
+                resumeLink: "$profileData.resumeLink",
+                accounts: "$profileData.accounts",
+                passedOutYear: "$profileData.passedOutYear",
+                profilePicture: "$profileData.profilePicture",
+                skills: "$profileData.skills",
+                professionalExperience: "$profileData.professionalExperience",
+                professionalTitle: "$profileData.professionalTitle",
+                totalProjects: { $size: "$projects" },
+                totalUpvotes: { 
+                    $reduce: {
+                        input: "$projects",
+                        initialValue: 0,
+                        in: { $add: ["$$value", { $ifNull: ["$$this.upvoteCount", 0] }] }
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                profileArray: 0,
+                profileData: 0,
+                __v: 0,
+                _id: 0,
+                password: 0,
+                createdAt: 0,
+                updatedAt: 0
+            }
+        },
+    ]
+
+    const results = await userModel.aggregate(pipeline)
+    return results.length > 0 ? results[0] : null
+}
+
 module.exports = {
     findUserByEmail,
+    findUserByUsername,
     createUser,
     findUserNameAlreadyExists,
     updateUser,
     fetchUserProfileData,
-    updateUserProfileData
+    updateUserProfileData,
+    findPortfolioDetails
 }
