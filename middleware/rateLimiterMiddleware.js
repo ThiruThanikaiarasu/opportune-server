@@ -2,10 +2,21 @@ const rateLimit = require('express-rate-limit')
 const rateLimiterConfig = require('../configurations/rateLimiterConfig')
 
 const shouldSkipRateLimit = (request) => {
-    if (!request || !request.path) return false
+    if (!request || !request.path) {
+        return false
+    }
 
-    const skippableEndpoints = ['/api/v1/user/checkUsername']
-    return skippableEndpoints.includes(request.path)
+    const skippableEndpoints = [
+        '/api/v1/user/checkUsername',
+        '/api/v1/project/search',
+        '/api/v1/project/tag',
+        '/api/v1/project/tags',
+        '/api/v1/project/skills',
+    ]
+
+    const fullPath = request.originalUrl.split('?')[0] 
+
+    return skippableEndpoints.includes(fullPath)  
 }
 
 const createRateLimiterInstance = (config) => {

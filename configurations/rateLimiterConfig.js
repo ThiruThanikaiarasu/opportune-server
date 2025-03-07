@@ -12,7 +12,7 @@ const rateLimiterConfig = {
     },
     
     auth: {
-        windowMs: 60 * 1000,
+        windowMs: 15 * 60 * 1000,
         max: 20,
         standardHeaders: true,
         legacyHeaders: false,
