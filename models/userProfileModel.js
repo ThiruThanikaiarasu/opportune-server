@@ -11,6 +11,7 @@ const mongoose = require('mongoose')
  *     - professionalTitle
  *     - professionalExperience
  *     - bio
+ *     - skills
  *     - passedOutYear
  *    properties: 
  *     author: 
@@ -30,6 +31,14 @@ const mongoose = require('mongoose')
  *      type: string
  *      description: The URL of the user's profile picture.
  *      example: 'https://lh3.googleusercontent.com/a/profile-image'
+ *     skills:
+ *       type: array
+ *       items:
+ *         type: string
+ *       description: A list of skills associated with the project, helping with categorization.
+ *       example: ['HTML', 'Java', 'Figma']
+ *       minItems: 1
+ *       maxItems: 3
  *     portfolioLink:
  *      type: string
  *      description: A link to the user's portfolio website.
@@ -106,6 +115,16 @@ const userProfileSchema = new mongoose.Schema(
                 /^(http|https):\/\/[a-zA-Z0-9\-_.]+(\.[a-zA-Z]{2,})?(:[0-9]{1,5})?(\/[a-zA-Z0-9\-_.~!*'();:@&=+$,/?#[\]%]*)?$/,
                 'External link must be a valid URL'
             ]
+        },
+        skills: {
+            type: [String],
+            required: [true, 'Skills is a mandatory field'],
+            validate: {
+                validator: function (skills) {
+                    return skills.length >= 1 && skills.length <= 3
+                },
+                message: 'Must have at least one and at most three skills',
+            },
         },
         portfolioLink: {
             type: String,
