@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs')
 
-const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData, findPortfolioDetails, findUserByUsername } = require('../services/userService')
+const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData, findPortfolioDetails, findUserByUsername, searchSkillsByKeyword } = require('../services/userService')
 const { validationResult } = require('express-validator')
 const { setResponseBody } = require('../utils/responseFormatter')
 
@@ -128,11 +128,25 @@ const getPortfolioByUsername = async (request, response) => {
     }
 }
 
+const searchSkills = async (request, response) => {
+    const { keyword = '' } = request.query
+
+    try {
+        const skills = await searchSkillsByKeyword(keyword)
+
+        response.status(200).send(setResponseBody("Skills fetched successfully", null, skills))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
 module.exports = {
     checkUsernameAvailability,
     resetPassword,
     getUserProfile,
     updateUserProfile,
     getUserInfo,
-    getPortfolioByUsername
+    getPortfolioByUsername,
+    searchSkills
 }

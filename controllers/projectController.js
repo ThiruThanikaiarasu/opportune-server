@@ -1,9 +1,9 @@
 const { validationResult } = require('express-validator')
+const { default: mongoose } = require('mongoose')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData, searchSkillsByKeyword } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
-const { default: mongoose } = require('mongoose')
 
 
 const addANewProject = async (request, response) => {
@@ -262,19 +262,6 @@ const updateProjectView = async (request, response) => {
     }
 }
 
-const searchSkills = async (request, response) => {
-    const { keyword = '' } = request.query
-
-    try {
-        const skills = await searchSkillsByKeyword(keyword)
-
-        response.status(200).send(setResponseBody("Skills fetched successfully", null, skills))
-    }
-    catch(error) {
-        response.status(500).send(setResponseBody(error.message, "server_error", null))
-    }
-}
-
 module.exports = {
     addANewProject,
     editProject,
@@ -287,6 +274,5 @@ module.exports = {
     getMoreProjects,
     handleUpvote,
     handleRemoveUpvote,
-    updateProjectView,
-    searchSkills
+    updateProjectView
 }

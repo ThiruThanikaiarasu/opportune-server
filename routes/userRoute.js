@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile, getUserInfo, getPortfolioByUsername } = require('../controllers/userController')
+const { checkUsernameAvailability, updateUserProfile, resetPassword, getUserProfile, getUserInfo, getPortfolioByUsername, searchSkills } = require('../controllers/userController')
 const { validateCheckUsernameInput, validateResetPasswordInputs } = require('../validators/userValidator')
 const upload = require('../middleware/fileUpload')
 const { verifyUser } = require('../middleware/authMiddleware')
@@ -251,5 +251,28 @@ router.get('/info',verifyUser, getUserInfo)
  */
 
 router.get('/portfolio/:username', getPortfolioByUsername)
+
+/**
+ * @swagger
+ * /user/skills:
+ *  get:
+ *   tags:
+ *    - Project
+ *   summary: Search for skills by keyword
+ *   parameters:
+ *    - name: keyword
+ *      in: query
+ *      description: The keyword to search for in skills.
+ *      required: false
+ *      schema:
+ *       type: string
+ *   responses:
+ *    200:
+ *      description: Successfully retrieved skills
+ *    500:
+ *      description: Internal server error
+ */
+
+router.get('/skills', searchSkills)
 
 module.exports = router

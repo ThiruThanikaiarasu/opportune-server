@@ -11,7 +11,7 @@ const shouldSkipRateLimit = (request) => {
         '/api/v1/project/search',
         '/api/v1/project/tag',
         '/api/v1/project/tags',
-        '/api/v1/project/skills',
+        '/api/v1/user/skills',
     ]
 
     const fullPath = request.originalUrl.split('?')[0] 

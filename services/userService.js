@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 
 const userModel = require('../models/userModel')
+const skillsModel = require('../models/skillsModel')
 const userProfileModel = require('../models/userProfileModel')
 const { uploadToS3, deleteFromS3 } = require('./s3Service')
 const { S3_BASE_URL } = require('../configurations/constants')
@@ -184,6 +185,23 @@ const findPortfolioDetails = async (username) => {
     return results.length > 0 ? results[0] : null
 }
 
+const searchSkillsByKeyword = async (keyword) => {
+    if (!keyword.trim()) {
+        return fetchAllSkills()
+    }
+
+    const skills = await skillsModel.find({
+        name: { $regex: `^${keyword}`, $options: 'i' }
+    })
+
+    
+    return skills
+}
+
+const fetchAllSkills = () => {
+    return skillsModel.find().limit() 
+}
+
 module.exports = {
     findUserByEmail,
     findUserByUsername,
@@ -192,5 +210,6 @@ module.exports = {
     updateUser,
     fetchUserProfileData,
     updateUserProfileData,
-    findPortfolioDetails
+    findPortfolioDetails,
+    searchSkillsByKeyword
 }
