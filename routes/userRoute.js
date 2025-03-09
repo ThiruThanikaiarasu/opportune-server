@@ -257,7 +257,7 @@ router.get('/portfolio/:username', getPortfolioByUsername)
  * /user/skills:
  *  get:
  *   tags:
- *    - Project
+ *    - User Profile
  *   summary: Search for skills by keyword
  *   parameters:
  *    - name: keyword

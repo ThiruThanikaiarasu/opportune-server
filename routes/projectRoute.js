@@ -69,7 +69,64 @@ const { validateProjectInputValues } = require('../validators/projectValidator')
 router.post('/', verifyUser, upload.single('thumbnail'), validateProjectInputValues, addANewProject)
 
 /**
- * 
+ * @swagger
+ * /project/{projectSlug}:
+ *  patch:
+ *   tags: 
+ *    - Project
+ *   summary: Edit an existing project
+ *   parameters:
+ *    - in: path
+ *      name: projectSlug
+ *      required: true
+ *      schema:
+ *        type: string
+ *      description: The unique slug of the project to be updated
+ *   requestBody:
+ *    required: false
+ *    content: 
+ *     application/json: 
+ *      schema:
+ *       type: object
+ *       properties: 
+ *         author: 
+ *           type: string
+ *           example: 66070b26334405fc15d70fa0
+ *         title: 
+ *           type: string
+ *           example: opportune
+ *         description: 
+ *           type: string
+ *           example: Find Talent by Projects, Not GPAs.
+ *         thumbnail: 
+ *           type: string
+ *           format: binary
+ *           example: https://my-bucket.s3.amazonaws.com/thumbnails/project-thumbnail.jpg
+ *         tags: 
+ *           type: array
+ *           items: 
+ *             type: string     
+ *           example: ["MERN", "AWS"]
+ *         githubLink: 
+ *           type: string
+ *           example: https://github.com/user/project
+ *         hostedLink: 
+ *           type: string
+ *           example: https://myproject.com
+ *         documentation: 
+ *           type: string
+ *           example: https://docs.myproject.com
+ *   responses: 
+ *       200:
+ *         description: Project updated successfully
+ *       400:
+ *         description: Input Validation error
+ *       404:
+ *         description: Project not found
+ *       409:
+ *         description: Conflict, Project with the same title already exists
+ *       503:
+ *         description: Service unavailable, temporarily unable to handle the request
  */
 
 router.patch('/:projectSlug', verifyUser, upload.single('thumbnail'), editProject)
