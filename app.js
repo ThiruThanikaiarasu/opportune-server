@@ -16,6 +16,7 @@ const githubAuthRoute = require('./routes/githubAuthRoute')
 const googleAuthRoute = require('./routes/googleAuthRoute')
 const { CSS_URL } = require('./configurations/constants')
 const rateLimiter = require('./middleware/rateLimiterMiddleware')
+const aboutUsRoute = require('./routes/aboutUsRoute')
 
 app.use(cors({
     origin: process.env.CORS_ORIGIN_URL, 
@@ -36,5 +37,6 @@ app.use('/api/v1/project', rateLimiter.contentBrowsing, projectRoute)
 app.use('/api/v1/user', rateLimiter.standard, userRoute)
 app.use('/api/v1/auth/github', rateLimiter.auth, githubAuthRoute)
 app.use('/api/v1/auth/google', rateLimiter.auth, googleAuthRoute)
+app.use('/api/v1/aboutus/', rateLimiter.standard, aboutUsRoute)
 
 module.exports = app
