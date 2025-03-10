@@ -25,6 +25,11 @@ const addImagesToDB = async (images, title = "", description = "", order = 0) =>
     }
 }
 
+const getAllAboutUsImagesFromDB = () => {
+    return aboutUsImageModel.find().sort({ order: 1 })
+}
+
 module.exports = {
-    addImagesToDB
+    addImagesToDB,
+    getAllAboutUsImagesFromDB
 }

@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const upload = require('../middleware/fileUpload')
-const { addAboutUsImage } = require('../controllers/aboutUsController')
+const { addAboutUsImage, getAllAboutUsImages } = require('../controllers/aboutUsController')
 
 /**
  * @swagger
@@ -44,6 +44,23 @@ const { addAboutUsImage } = require('../controllers/aboutUsController')
  *         description: Service unavailable, temporarily unable to handle the request
  */
 
-router.post('/image', upload.array('images', 10), addAboutUsImage)
+router.post('/images', upload.array('images', 10), addAboutUsImage)
+
+
+/**
+ * @swagger
+ * /aboutus/images:
+ *  get:
+ *   tags: 
+ *    - About Us
+ *   summary: Get all About Us images
+ *   responses: 
+ *       200:
+ *         description: Successfully retrieved images
+ *       500:
+ *         description: Server error
+ */
+
+router.get('/images', getAllAboutUsImages)
 
 module.exports = router
