@@ -691,6 +691,7 @@ const incrementProjectViewCount = async (project) => {
 }
 
 module.exports = {
+    createSlug,
     doesAuthorHaveProjectWithTitle,
     createNewProject,
     updateProjectData,

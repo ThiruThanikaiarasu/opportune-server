@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator')
 const { default: mongoose } = require('mongoose')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData, createSlug } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 
@@ -49,6 +49,15 @@ const editProject = async (request, response) => {
 
         if(!project) {
             return response.status(404).send(setResponseBody("Project not found", "not_found", null))
+        }
+
+        if(project.title !== newProjectData.title) {
+            const newSlug = createSlug(newProjectData.title) 
+            const isExistingSlug = await findProjectBySlug(newSlug)
+            if(isExistingSlug) {
+                return response.status(409).send(setResponseBody("Title already exists. Please choose a different title.", "existing_project_title", null))
+            }
+
         }
 
         if (project.author.toString() !== userId.toString()) {
