@@ -98,7 +98,7 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
                         else: null  
                     } 
                 },
-                isUserLiked: false
+                isUpvotedByUser: false
             } 
         },
         { 
@@ -137,7 +137,7 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
         
         pipeline.push({
             $addFields: {
-                isUserLiked: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
+                isUpvotedByUser: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
             }
         })
         
@@ -231,7 +231,7 @@ const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
                         else: null
                     }
                 },
-                isUserLiked: false
+                isUpvotedByUser: false
             }
         },
         {
@@ -268,7 +268,7 @@ const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
 
         pipeline.push({
             $addFields: {
-                isUserLiked: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
+                isUpvotedByUser: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
             }
         })
 
@@ -409,7 +409,7 @@ const getFilteredProjects = async (tag, sortBy, order, limit, page, userId = nul
             },
             {
                 $addFields: {
-                    isUserLiked: { $gt: [{ $size: '$userUpvotes' }, 0] }
+                    isUpvotedByUser: { $gt: [{ $size: '$userUpvotes' }, 0] }
                 }
             },
             {
