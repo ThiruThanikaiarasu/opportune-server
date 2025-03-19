@@ -13,7 +13,7 @@ const checkUsernameAvailability = async(request,response) => {
             return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
         }
 
-        const userExists = !!(await findUserNameAlreadyExists(username))
+        const userExists = await findUserNameAlreadyExists(username)
         if (userExists) {
             return response.status(409).send(setResponseBody("Username already exists","existing_user_name",null));
         }

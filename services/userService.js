@@ -34,8 +34,8 @@ const createUser = async ({
 
 
 const findUserNameAlreadyExists = async (username) => {
-    return await userModel.exists({ username })
-}
+    return await userModel.exists({ username: { $regex: new RegExp(`^${username}$`, 'i') } })
+}  
 
 const updateUser = async (user, updates) => {
     if (updates.password) {
