@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs')
 
 const { generateOtp , createOtp, findAuthUserByEmail } = require('../services/authService')
-const { findUserByEmail, createUser, fetchUserProfileData } = require('../services/userService')
+const { findUserByEmail, createUser, fetchUserProfileData, updateUserProfilePicture } = require('../services/userService')
 const { setResponseBody } = require('../utils/responseFormatter')
 const { validationResult } = require('express-validator')
 const { generateToken, setTokenCookie, clearTokenCookie } = require('../utils/tokenServices')
@@ -9,6 +9,7 @@ const { sendOtpThroughMail } = require('../services/emailService')
 const OtpError = require('../errors/OtpError')
 const EmailError = require('../errors/EmailError')
 const { create } = require('../models/userModel')
+const generateRandomUserProfilePicture = require('../utils/randomUserProfilePictureGenerator')
 
 const signup = async(request,response) =>
 {
@@ -140,6 +141,8 @@ const verifyOtp = async(request,response) => {
         if(!existingUser) 
         {
             const {name, username, password } = await findAuthUserByEmail(email)
+            const profilePicture = generateRandomUserProfilePicture(username)
+            console.log(profilePicture)
             let userData = {
                 name,
                 username,
@@ -147,6 +150,8 @@ const verifyOtp = async(request,response) => {
                 password
             }
             newUser = await createUser(userData)
+
+            await updateUserProfilePicture(newUser._id, profilePicture)
         }
         
         const userData = existingUser || newUser
@@ -154,6 +159,7 @@ const verifyOtp = async(request,response) => {
         setTokenCookie(response, 'SessionID', token)
         
         const userProfile = await fetchUserProfileData(userData._id)
+        console.log("user profile " + userProfile)
         const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
 
         let responseData = {
@@ -167,6 +173,7 @@ const verifyOtp = async(request,response) => {
     }
     catch(error)
     {
+        console.log(error.message)
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
 }

@@ -8,6 +8,7 @@ const UploadError = require("../errors/UploadError")
 const generateRandomImageName = () => crypto.randomBytes(32).toString('hex')
 
 const uploadToS3 = async (thumbnail) => {
+    console.log("thumbnail " + thumbnail)
     const imageName = generateRandomImageName()
 
     const params = {
