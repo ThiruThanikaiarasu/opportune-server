@@ -46,7 +46,10 @@ const verifyUser = async (request, response, next) => {
                 }
 
                 const { id } = decoded;
-                const user = await findUserById(id);  
+                const user = await findUserById(id); 
+                if(!user) {
+                    return response.status(401).send(setResponseBody("Invalid", "authentication_error", null))
+                }
                 request.user = {
                     _id: user._id,
                     email: user.email

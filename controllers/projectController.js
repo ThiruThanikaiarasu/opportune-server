@@ -30,7 +30,6 @@ const addANewProject = async (request, response) => {
         response.status(201).send(setResponseBody("Project created Successfully", null, newProject))
     }
     catch(error) {
-        console.log(error)
         if(error instanceof UploadError) {
             return response.status(error.statusCode).send(setResponseBody(error.message, "service_unavailable", null))
         }

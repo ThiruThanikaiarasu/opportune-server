@@ -40,13 +40,11 @@ const findUserNameAlreadyExists = async (username) => {
 const updateUserProfilePicture = async (userId, profilePicture) => {
     try {
         const thumbnailS3Key = await uploadToS3(profilePicture)
-        console.log(thumbnailS3Key)
 
         const userProfile = new userProfileModel({
             author: userId,
             profilePicture: S3_BASE_URL + thumbnailS3Key
         })
-        console.log(userProfile)
 
         await userProfile.save({ validateModifiedOnly: true })
     } catch(error) {

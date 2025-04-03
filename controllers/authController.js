@@ -141,8 +141,7 @@ const verifyOtp = async(request,response) => {
         if(!existingUser) 
         {
             const {name, username, password } = await findAuthUserByEmail(email)
-            const profilePicture = generateRandomUserProfilePicture(username)
-            console.log(profilePicture)
+            const profilePicture = await generateRandomUserProfilePicture(username)
             let userData = {
                 name,
                 username,
@@ -159,7 +158,6 @@ const verifyOtp = async(request,response) => {
         setTokenCookie(response, 'SessionID', token)
         
         const userProfile = await fetchUserProfileData(userData._id)
-        console.log("user profile " + userProfile)
         const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
 
         let responseData = {
@@ -173,7 +171,6 @@ const verifyOtp = async(request,response) => {
     }
     catch(error)
     {
-        console.log(error.message)
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
 }
