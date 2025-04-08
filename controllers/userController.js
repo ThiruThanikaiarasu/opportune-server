@@ -1,0 +1,152 @@
+const bcrypt = require('bcryptjs')
+
+const { findUserNameAlreadyExists, findUserByEmail, updateUser, updateUserProfileData, fetchUserProfileData, findPortfolioDetails, findUserByUsername, searchSkillsByKeyword } = require('../services/userService')
+const { validationResult } = require('express-validator')
+const { setResponseBody } = require('../utils/responseFormatter')
+
+const checkUsernameAvailability = async(request,response) => {
+    const { username } = request.body
+    try {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error",null))
+        }
+
+        const userExists = !!(await findUserNameAlreadyExists(username))
+        if (userExists) {
+            return response.status(409).send(setResponseBody("Username already exists","existing_user_name",null));
+        }
+        return response.status(200).send(setResponseBody("Username is available",null,null));
+    }
+    catch(error)
+    {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const resetPassword = async(request,response) => {
+    const { email, password } = request.body
+    try {
+        const errors = validationResult(request)
+
+        if(!errors.isEmpty()) {
+            return response.status(400).send(setResponseBody(errors.array()[0].msg,"validation_error", null))
+        }
+
+        const existingUser = await findUserByEmail(email)
+        if(!existingUser)
+        {
+            return response.status(400).send(setResponseBody("Invalid Operation", "user_not_found", null))
+        }
+
+        if(existingUser.password)
+        {
+            const isPasswordMatch = await bcrypt.compare(password, existingUser.password);
+            if (isPasswordMatch) {
+                return response.status(409).send(setResponseBody("The new password cannot be the same as the old password. Please choose a different password.", "password_error", null));
+            }
+        }
+
+        const userData = await updateUser(existingUser, { password : password })
+
+        let responseData = {
+            name : userData.name,
+            username : userData.username, 
+            email: userData.email
+        }
+
+        return response.status(200).send(setResponseBody("Password reset successfully.", null, responseData))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const getUserProfile = async (request, response) => {
+    const userId = request.user._id
+    try {
+        const userProfile = await fetchUserProfileData(userId)
+
+        response.status(200).send(setResponseBody("User data fetched", null, userProfile))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const updateUserProfile = async (request, response) => {
+    const user = request.user
+    const profileData = request.body
+    const profilePicture = request.file || null
+
+    try {
+        const userProfile = await updateUserProfileData(user, profileData, profilePicture)
+
+        response.status(200).send(setResponseBody("User Profile updated", null, userProfile))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const getUserInfo = async(request,response) => {
+    const { _id, email } = request.user
+    try {
+        const userData = await findUserByEmail(email)
+        const userProfile = await fetchUserProfileData(_id)
+
+        const profilePicture = Array.isArray(userProfile) && userProfile.length > 0 ? userProfile[0].profilePicture : null;
+        const responseData = {
+            profilePicture : profilePicture,
+            username : userData.username,
+            email : userData.email,
+        }
+
+        response.status(200).send(setResponseBody("User data fetched", null, responseData))
+    }
+    catch(error) {
+        return response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const getPortfolioByUsername = async (request, response) => {
+    const { username } = request.params
+    try {
+        const existingUser = await findUserByUsername(username)
+
+        if(!existingUser) {
+            return response.status(404).send(setResponseBody("Portfolio not found", "not_found", null))
+        }
+
+        const portfolio = await findPortfolioDetails(username)
+
+        response.status(200).send(setResponseBody("Portfolio fetched", null, portfolio))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+const searchSkills = async (request, response) => {
+    const { keyword = '' } = request.query
+
+    try {
+        const skills = await searchSkillsByKeyword(keyword)
+
+        response.status(200).send(setResponseBody("Skills fetched successfully", null, skills))
+    }
+    catch(error) {
+        response.status(500).send(setResponseBody(error.message, "server_error", null))
+    }
+}
+
+module.exports = {
+    checkUsernameAvailability,
+    resetPassword,
+    getUserProfile,
+    updateUserProfile,
+    getUserInfo,
+    getPortfolioByUsername,
+    searchSkills
+}

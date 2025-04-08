@@ -1,0 +1,51 @@
+const express = require("express");
+const router = express.Router();
+
+const { handleGitHubCallback } = require("../controllers/githubAuthController");
+const { authenticateWithGitHub } = require('../middleware/oauthMiddleware')
+
+/**
+ * @swagger
+ * /auth/github/login:
+ *   get:
+ *     tags:
+ *       - "GitHub Authentication"
+ *     summary: "Login with GitHub"
+ *     description: "Initiates the GitHub OAuth login flow."
+ *     responses:
+ *       200:
+ *         description: "Redirects to GitHub login page"
+ *       400:
+ *         description: "Bad Request"
+ */
+
+router.get("/login", authenticateWithGitHub);
+
+/**
+ * @swagger
+ * /auth/github/callback:
+ *   get:
+ *     tags:
+ *       - "GitHub Authentication"
+ *     summary: "GitHub OAuth Callback"
+ *     description: "Handles the GitHub OAuth callback and retrieves user information."
+ *     parameters:
+ *       - in: query
+ *         name: code
+ *         required: true
+ *         description: "GitHub OAuth code"
+ *     responses:
+ *       200:
+ *         description: "Successfully authenticated, user data retrieved"
+ *       400:
+ *         description: "Bad Request - The OAuth code was missing or invalid"
+ *       409:
+ *         description: "Conflict - Email already exists with a basic login. Please log in using your email and password."
+ *       500:
+ *         description: "Internal Server Error - Authentication failed due to a server issue"
+ */
+
+
+router.get("/callback", authenticateWithGitHub, handleGitHubCallback);
+
+module.exports = router;
