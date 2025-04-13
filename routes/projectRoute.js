@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { addANewProject, searchProjects, filterProjects, homeFeed, searchTags, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView, editProject } = require('../controllers/projectController')
+const { addANewProject, homeFeed, getAllTags, getMoreProjects, getProjectByUsernameAndSlug, handleUpvote, handleRemoveUpvote, updateProjectView, editProject } = require('../controllers/projectController')
 const upload = require('../middleware/fileUpload')
 const { verifyUser, optionalVerify } = require('../middleware/authMiddleware')
 const { validateProjectInputValues } = require('../validators/projectValidator')
@@ -138,7 +138,7 @@ router.patch('/:projectSlug', verifyUser, upload.single('thumbnail'), editProjec
  *   tags:
  *    - Project
  *   summary: Retrieve the home feed projects
- *   description: Get a list of projects for the home feed with pagination support.
+ *   description: Get a list of projects for the home feed with pagination support and optional filtering by search term or tag.
  *   parameters:
  *    - name: limit
  *      in: query
@@ -154,6 +154,20 @@ router.patch('/:projectSlug', verifyUser, upload.single('thumbnail'), editProjec
  *      schema:
  *       type: string
  *       example: "1"
+ *    - name: search
+ *      in: query
+ *      description: Search term to filter projects by title or description.
+ *      required: false
+ *      schema:
+ *       type: string
+ *       example: "portfolio"
+ *    - name: tag
+ *      in: query
+ *      description: Tag to filter projects. Matches against project's tag array (case-insensitive).
+ *      required: false
+ *      schema:
+ *       type: string
+ *       example: "MERN"
  *   responses:
  *    200:
  *      description: Successfully retrieved home feed projects
@@ -163,99 +177,6 @@ router.patch('/:projectSlug', verifyUser, upload.single('thumbnail'), editProjec
 
 
 router.get('/home', optionalVerify, homeFeed)
-
-
-/**
- * @swagger
- * /project/search:
- *  get:
- *   tags:
- *    - Project
- *   summary: Search for projects by keyword
- *   parameters:
- *    - name: keyword
- *      in: query
- *      description: The keyword to search for in project title, description and tags. 
- *      required: true
- *      schema: 
- *       type: string 
- *    - name: limit
- *      in: query
- *      description: The number of results to return. 
- *      required: false
- *      schema: 
- *       type: string 
- *    - name: page
- *      in: query
- *      description: The page number for pagination. 
- *      required: false
- *      schema: 
- *       type: string 
- *   responses: 
- *    200:
- *      description: Successfully retrieved projects
- *    400:
- *      description: Missing keyword in the query parameters
- *    500:
- *      description: Internal server error
- */
-
-router.get('/search', optionalVerify, searchProjects)
-
-
-/**
- * @swagger
- * /project/filter:
- *  get:
- *   tags:
- *    - Project
- *   summary: Filter projects by tag and sort the results
- *   parameters:
- *    - name: tag
- *      in: query
- *      description: The tag to filter projects by.
- *      required: false
- *      schema: 
- *       type: string
- *    - name: sortBy
- *      in: query
- *      description: The field to sort the results by. Default is "createdAt".
- *      required: false
- *      schema: 
- *       type: string
- *       example: "createdAt"
- *    - name: order
- *      in: query
- *      description: The order of sorting. Can be "asc" or "desc". Default is "desc".
- *      required: false
- *      schema: 
- *       type: string
- *       enum:
- *        - asc
- *        - desc
- *       example: "desc"
- *    - name: limit
- *      in: query
- *      description: The number of results to return. Default is 10.
- *      required: false
- *      schema: 
- *       type: string
- *       example: "10"
- *    - name: page
- *      in: query
- *      description: The page number for pagination. Default is 1.
- *      required: false
- *      schema: 
- *       type: string
- *       example: "1"
- *   responses:
- *    200:
- *      description: Successfully retrieved filtered projects
- *    500:
- *      description: Internal server error
- */
-
-router.get('/filter', optionalVerify, filterProjects)
 
 
 /**
@@ -274,28 +195,6 @@ router.get('/filter', optionalVerify, filterProjects)
 
 router.get('/tags', getAllTags)
 
-/**
- * @swagger
- * /project/tag:
- *  get:
- *   tags:
- *    - Project
- *   summary: Search for tags by keyword
- *   parameters:
- *    - name: keyword
- *      in: query
- *      description: The keyword to search for in tags.
- *      required: false
- *      schema:
- *       type: string
- *   responses:
- *    200:
- *      description: Successfully retrieved tags
- *    500:
- *      description: Internal server error
- */
-
-router.get('/tag', searchTags)
 
 /**
  * @swagger

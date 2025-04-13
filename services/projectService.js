@@ -85,148 +85,39 @@ const updateProjectData = async (project, newProjectData, thumbnail) => {
     return project
 }
 
-const getHomeFeedProjects = async (limit, page, userId = null) => { 
-    const skip = (page - 1) * limit 
-    
-    const pipeline = [ 
-        { 
-            $addFields: { 
-                thumbnailUrl: { 
-                    $cond: { 
-                        if: { $ifNull: ["$thumbnail.s3Url", false] },  
-                        then: "$thumbnail.s3Url",  
-                        else: null  
-                    } 
-                },
-                isUpvotedByUser: false
-            } 
-        },
-        { 
-            $lookup: { 
-                from: 'users',            
-                localField: 'author',     
-                foreignField: '_id', 
-                as: 'authorDetails' 
-            } 
-        }, 
-        { 
-            $unwind: '$authorDetails' 
-        }
-    ]
-    
-    if (userId) {
-        pipeline.push({
-            $lookup: {
-                from: 'upvotes',
-                let: { projectSlug: '$slug' },
-                pipeline: [
-                    { 
-                        $match: { 
-                            $expr: { 
-                                $and: [
-                                    { $eq: ['$upvoteFor', '$$projectSlug'] },
-                                    { $eq: ['$upvoteBy', userId] }
-                                ]
-                            }
-                        }
-                    }
-                ],
-                as: 'userUpvotes'
-            }
-        })
-        
-        pipeline.push({
-            $addFields: {
-                isUpvotedByUser: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
-            }
-        })
-        
-        pipeline.push({
-            $project: {
-                userUpvotes: 0
-            }
-        })
-
-        pipeline.push({
-            $lookup: {
-                from: 'userprofiles',
-                localField: 'author',
-                foreignField: 'author',
-                as: 'authorProfile'
-            }
-        })
-
-        pipeline.push({
-            $unwind: { 
-                path: '$authorProfile', 
-                preserveNullAndEmptyArrays: true 
-            }
-        })
-
-        pipeline.push({
-            $addFields: {
-                'authorDetails.profilePicture': { 
-                    $cond: { 
-                        if: { $ifNull: ['$authorProfile.profilePicture', false] }, 
-                        then: '$authorProfile.profilePicture', 
-                        else: null 
-                    } 
-                }
-            }
-        })
-    }
-    
-    pipeline.push(
-        { 
-            $sort: { 
-                upvoteCount: -1, 
-                createdAt: -1 
-            } 
-        }, 
-        {  
-            $skip: skip  
-        },  
-        {  
-            $limit: limit + 1 
-        }, 
-        { 
-            $project: { 
-                __v: 0, 
-                'thumbnail': 0, 
-                _id: 0, 
-                'authorDetails.__v': 0, 
-                'authorDetails._id': 0, 
-                'authorDetails.password': 0, 
-                'authorDetails.createdAt': 0, 
-                'authorDetails.updatedAt': 0,
-                'authorProfile': 0
-            } 
-        }
-    )
-    
-    const projects = await projectModel.aggregate(pipeline)
-    
-    const hasNextPage = projects.length > limit
-
-    return {
-        projects: hasNextPage ? projects.slice(0, limit) : projects,
-        hasNextPage
-    }
-}
-
-const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
+const getHomeFeedProjects = async (limit, page, userId = null, search = '', tag = '') => {
     const skip = (page - 1) * limit
 
-    const searchQuery = {
-        $or: [
-            { title: { $regex: keyword, $options: 'i' } },
-            { description: { $regex: keyword, $options: 'i' } },
-            { tags: { $elemMatch: { $regex: keyword, $options: 'i' } } }
-        ]
+    const pipeline = []
+
+    if (search || tag) {
+        const matchConditions = []
+
+        if (search) {
+            matchConditions.push({
+                $or: [
+                    { title: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } }
+                ]
+            })
+        }
+
+        if (tag) {
+            matchConditions.push({
+                $expr: {
+                    $in: [tag.toLowerCase(), { $map: { input: '$tags', as: 't', in: { $toLower: '$$t' } } }]
+                }
+            })
+        }
+        
+        pipeline.push({
+            $match: {
+                $and: matchConditions
+            }
+        })        
     }
 
-    const pipeline = [
-        { $match: searchQuery },
+    pipeline.push(
         {
             $addFields: {
                 thumbnailUrl: {
@@ -247,55 +138,22 @@ const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
                 as: 'authorDetails'
             }
         },
-        { $unwind: '$authorDetails' }
-    ]
-
-    if (userId) {
-        pipeline.push({
-            $lookup: {
-                from: 'upvotes',
-                let: { projectSlug: '$slug' },
-                pipeline: [
-                    {
-                        $match: {
-                            $expr: {
-                                $and: [
-                                    { $eq: ['$upvoteFor', '$$projectSlug'] },
-                                    { $eq: ['$upvoteBy', userId] }
-                                ]
-                            }
-                        }
-                    }
-                ],
-                as: 'userUpvotes'
-            }
-        })
-
-        pipeline.push({
-            $addFields: {
-                isUpvotedByUser: { $cond: { if: { $gt: [{ $size: '$userUpvotes' }, 0] }, then: true, else: false } }
-            }
-        })
-
-        pipeline.push({ $project: { userUpvotes: 0 } })
-
-        pipeline.push({
+        { $unwind: '$authorDetails' },
+        {
             $lookup: {
                 from: 'userprofiles',
                 localField: 'author',
                 foreignField: 'author',
                 as: 'authorProfile'
             }
-        })
-
-        pipeline.push({
+        },
+        {
             $unwind: {
                 path: '$authorProfile',
                 preserveNullAndEmptyArrays: true
             }
-        })
-
-        pipeline.push({
+        },
+        {
             $addFields: {
                 'authorDetails.profilePicture': {
                     $cond: {
@@ -304,92 +162,9 @@ const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
                         else: null
                     }
                 }
-            }
-        })
-    }
-
-    pipeline.push(
-        { $skip: skip },
-        { $limit: limit },
-        {
-            $project: {
-                __v: 0,
-                thumbnail: 0,
-                _id: 0,
-                'authorDetails.__v': 0,
-                'authorDetails._id': 0,
-                'authorDetails.password': 0,
-                'authorDetails.createdAt': 0,
-                'authorDetails.updatedAt': 0,
-                authorProfile: 0
             }
         }
     )
-
-    return await projectModel.aggregate(pipeline)
-}
-
-const getFilteredProjects = async (tag, sortBy, order, limit, page, userId = null) => {
-    const skip = (page - 1) * limit
-
-    const filters = {}
-    if (tag) filters.tags = { $regex: tag, $options: 'i' }
-
-    const sortOrder = order === 'asc' ? 1 : -1
-    const sortCriteria = { [sortBy]: sortOrder }
-
-    const pipeline = [
-        {
-            $match: filters
-        },
-        {
-            $addFields: {
-                thumbnailUrl: {
-                    $cond: {
-                        if: { $ifNull: ['$thumbnail.s3Url', false] },
-                        then: '$thumbnail.s3Url',
-                        else: null
-                    }
-                }
-            }
-        },
-        {
-            $lookup: {
-                from: 'users',
-                localField: 'author',
-                foreignField: '_id',
-                as: 'authorDetails'
-            }
-        },
-        {
-            $unwind: '$authorDetails'
-        },
-        {
-            $lookup: {
-                from: 'userprofiles',
-                localField: 'author',
-                foreignField: 'author',
-                as: 'authorProfile'
-            }
-        },
-        {
-            $unwind: {
-                path: '$authorProfile',
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        {
-            $addFields: {
-                'authorDetails.profilePicture': {
-                    $cond: {
-                        if: { $ifNull: ['$authorProfile.profilePicture', false] },
-                        then: '$authorProfile.profilePicture',
-                        else: null
-                    }
-                }
-            }
-        }
-    ]
 
     if (userId) {
         pipeline.push(
@@ -414,7 +189,13 @@ const getFilteredProjects = async (tag, sortBy, order, limit, page, userId = nul
             },
             {
                 $addFields: {
-                    isUpvotedByUser: { $gt: [{ $size: '$userUpvotes' }, 0] }
+                    isUpvotedByUser: {
+                        $cond: {
+                            if: { $gt: [{ $size: '$userUpvotes' }, 0] },
+                            then: true,
+                            else: false
+                        }
+                    }
                 }
             },
             {
@@ -426,51 +207,36 @@ const getFilteredProjects = async (tag, sortBy, order, limit, page, userId = nul
     }
 
     pipeline.push(
-        {
-            $sort: sortCriteria
-        },
-        {
-            $skip: skip
-        },
-        {
-            $limit: limit
-        },
+        { $sort: { upvoteCount: -1, createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit + 1 },
         {
             $project: {
                 __v: 0,
-                'thumbnail': 0,
+                thumbnail: 0,
                 _id: 0,
                 'authorDetails.__v': 0,
                 'authorDetails._id': 0,
                 'authorDetails.password': 0,
                 'authorDetails.createdAt': 0,
                 'authorDetails.updatedAt': 0,
-                'authorProfile': 0
+                authorProfile: 0
             }
         }
     )
 
     const projects = await projectModel.aggregate(pipeline)
-    return projects
+    const hasNextPage = projects.length > limit
+
+    return {
+        projects: hasNextPage ? projects.slice(0, limit) : projects,
+        hasNextPage
+    }
 }
+
 
 const searchAllTags = () => {
     return projectTagModel.find()
-}
-
-const searchTagsByKeyword = (keyword) => {
-    if(!keyword.trim()) {
-        return searchAllTags()
-    }
-
-    return projectTagModel.find(
-        {
-            tag: {
-                $regex: `^${keyword}`, 
-                $options: 'i'
-            }
-        }
-    )
 }
 
 const findProjectByAuthorAndSlug = async (username, slug) => {
@@ -701,10 +467,7 @@ module.exports = {
     createNewProject,
     updateProjectData,
     getHomeFeedProjects,
-    searchProjectByKeyword,
-    getFilteredProjects,
     searchAllTags,
-    searchTagsByKeyword,
     findProjectByAuthorAndSlug,
     getPopularProjectsByAuthor,
     findProjectBySlug,

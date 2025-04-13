@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator')
 const { default: mongoose } = require('mongoose')
 
-const { doesAuthorHaveProjectWithTitle, createNewProject, searchProjectByKeyword, getFilteredProjects, getHomeFeedProjects, searchTagsByKeyword, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData, createSlug } = require("../services/projectService")
+const { doesAuthorHaveProjectWithTitle, createNewProject, getHomeFeedProjects, searchAllTags, getPopularProjectsByAuthor, findProjectByAuthorAndSlug, createVote, updateProjectVoteCount, findVote, deleteVote, findProjectBySlug, incrementProjectViewCount, updateProjectData, createSlug } = require("../services/projectService")
 const { setResponseBody } = require("../utils/responseFormatter")
 const UploadError = require('../errors/UploadError')
 
@@ -74,14 +74,13 @@ const editProject = async (request, response) => {
 }
 
 const homeFeed = async (request, response) => {
-
-    const { limit = 10, page = 1 } = request.query
+    const { limit = 10, page = 1, search = '', tag = '' } = request.query
     const limitInt = parseInt(limit, 10)
     const pageInt = parseInt(page, 10)
 
     try {
         const userId = request.isAuthenticated ? request.user._id : null
-        const { projects, hasNextPage } = await getHomeFeedProjects(limitInt, pageInt, userId)
+        const { projects, hasNextPage } = await getHomeFeedProjects(limitInt, pageInt, userId, search.trim(), tag.trim())
 
         response.status(200).send(setResponseBody("Home feed projects", null, { projects, hasNextPage }))
     }
@@ -89,56 +88,6 @@ const homeFeed = async (request, response) => {
         response.status(500).send(setResponseBody(error.message, "server_error", null))
     }
 
-}
-
-const searchProjects = async (request, response) => {
-    const { keyword, limit = 10, page = 1 } = request.query
-    const limitInt = parseInt(limit, 10)
-    const pageInt = parseInt(page, 10)
-
-
-    try{
-        if(!keyword || !keyword.trim()) {
-            return response.status(400).send(setResponseBody("Keyword is required", "keyword_missing", null))
-        }
-
-        const userId = request.isAuthenticated ? request.user._id : null
-        const projects = await searchProjectByKeyword(keyword, limitInt, pageInt, userId)
-
-        response.status(200).send(setResponseBody("Projects that matches the keyword", null, projects))
-
-    }
-    catch(error) {
-        response.status(500).send(setResponseBody(error.message, "server_error", null))
-    }
-}
-
-const filterProjects = async (request, response) => {
-    const { tag, sortBy = "createdAt", order = "desc", limit = 10, page = 1 } = request.query 
-    const limitInt = parseInt(limit, 10)
-    const pageInt = parseInt(page, 10)
-
-    try{
-        const userId = request.isAuthenticated ? request.user._id : null
-        const projects = await getFilteredProjects(tag, sortBy, order, limitInt, pageInt, userId)
-
-        response.status(200).send(setResponseBody("Filtered projects", null, projects))
-    }
-    catch(error) {
-        response.status(500).send(setResponseBody(error.message, "server_error", null))
-    }
-}
-
-const searchTags = async (request, response) => {
-    const { keyword = '' } = request.query
-    try {
-        const tags = await searchTagsByKeyword(keyword)
-
-        response.status(200).send(setResponseBody("Tags fetched successfully", null, tags))
-    }
-    catch(error) {
-        response.status(500).send(setResponseBody(error.message, "server_error", null))
-    }
 }
 
 const getAllTags = async (request, response) => {
@@ -275,9 +224,6 @@ module.exports = {
     addANewProject,
     editProject,
     homeFeed,
-    searchProjects,
-    filterProjects,
-    searchTags,
     getAllTags,
     getProjectByUsernameAndSlug,
     getMoreProjects,
