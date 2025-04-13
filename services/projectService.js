@@ -111,6 +111,31 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
         }, 
         { 
             $unwind: '$authorDetails' 
+        },
+        {
+            $lookup: {
+                from: 'userprofiles',
+                localField: 'author',
+                foreignField: 'author',
+                as: 'authorProfile'
+            }
+        },
+        {
+            $unwind: { 
+                path: '$authorProfile', 
+                preserveNullAndEmptyArrays: true 
+            }
+        },
+        {
+            $addFields: {
+                'authorDetails.profilePicture': { 
+                    $cond: { 
+                        if: { $ifNull: ['$authorProfile.profilePicture', false] }, 
+                        then: '$authorProfile.profilePicture', 
+                        else: null 
+                    } 
+                }
+            }
         }
     ]
     
@@ -144,34 +169,6 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
         pipeline.push({
             $project: {
                 userUpvotes: 0
-            }
-        })
-
-        pipeline.push({
-            $lookup: {
-                from: 'userprofiles',
-                localField: 'author',
-                foreignField: 'author',
-                as: 'authorProfile'
-            }
-        })
-
-        pipeline.push({
-            $unwind: { 
-                path: '$authorProfile', 
-                preserveNullAndEmptyArrays: true 
-            }
-        })
-
-        pipeline.push({
-            $addFields: {
-                'authorDetails.profilePicture': { 
-                    $cond: { 
-                        if: { $ifNull: ['$authorProfile.profilePicture', false] }, 
-                        then: '$authorProfile.profilePicture', 
-                        else: null 
-                    } 
-                }
             }
         })
     }
@@ -208,6 +205,7 @@ const getHomeFeedProjects = async (limit, page, userId = null) => {
     
     return projects
 }
+
 
 const searchProjectByKeyword = async (keyword, limit, page, userId = null) => {
     const skip = (page - 1) * limit
